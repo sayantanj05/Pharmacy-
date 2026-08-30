@@ -1,0 +1,24 @@
+Tech Stack
+Frontend: React.js and Angular , Bootstarp, React icons, Framer Motion, Jquery
+Backend: Node.js, Express.js (we will the backend in java later when i order to do so)
+Database: MongoDB Atlas and Aura DB(for alternatives medicine suggestion)
+User: Customers, Super Admin(Supplier) and Shop Owners
+About Project:-
+To build the Pharmacy Stock & Expiry Tracker Real-Time Application that enables users to manage inventory, track stock levels,Monitor Expiry dates.
+
+The shop owner maintains as few inventory for each item as reasonable, to reduce 
+inventory overheads after being inspired by the just-in-time (JIT) philosophy.
+
+The shop owner would give a command to generate the list of medicines which have expired. It should also prepare a vendor-wise list 
+of the expired items so that the shop owner can ask the vendor to replace these 
+items. 
+
+The Application should also generate the revenue and profit for any given period(Day,Week,Month,Year) for shop owners.	
+It should also show vendor-wise and customer-wise payments for the period.
+
+The Application should also generate the revenue and profit for any given period(Day,Week,Month,Year) for shop owners.	
+It should also show vendor-wise and customer-wise payments for the period.
+
+If customer wants to buy a medicine but its get out of stock he/she will get alternatives medicine suggestion (if those alternatives also not available then app will show an appropriate message).
+
+APIs:- RESTful APIs and GraphQL
