@@ -4,6 +4,6 @@ const expiryController = require('../controllers/expiryController');
 const { protect } = require('../middleware/auth');
 
 router.get('/', protect, expiryController.getExpiryLogs);
-router.post('/replacement', protect, expiryController.createReplacement);
+router.post('/:id/replacement', protect, expiryController.createReplacement);
 
 module.exports = router;

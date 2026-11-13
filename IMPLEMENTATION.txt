@@ -1,0 +1,397 @@
+IMPLEMENTATION DOCUMENT
+Pharmacy Stock & Expiry Tracker Real-Time Application
+
+Version: 1.0
+Date: 2026-11-13
+Status: Final
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. SUMMARY
+2. EXECUTION OF THE PROJECT
+3. MODULE IMPLEMENTATION
+4. SOFTWARE REQUIREMENTS
+5. HARDWARE REQUIREMENTS
+
+================================================================================
+1. SUMMARY
+================================================================================
+
+The Pharmacy Stock & Expiry Tracker is a real-time web application for pharmacy inventory and financial management, built on a three-tier architecture with two React.js SPAs (Owner Frontend for Shop Owners/Customers, Admin Frontend for Super Admin), a Node.js/Express.js REST/GraphQL backend, and dual databases (MongoDB Atlas primary, Aura DB for alternative medicine suggestions). It supports three roles (Customer, Shop Owner, Super Admin) with RBAC, featuring JIT inventory management, expiry tracking with vendor-wise replacements, Aura DB-powered alternative suggestions, supply entry with PDF generation, financial reporting with revenue/profit analytics, JWT/bcrypt authentication, and a modular 13-controller/14-model backend with responsive Bootstrap/Framer Motion/Recharts frontend.
+
+================================================================================
+2. EXECUTION OF THE PROJECT
+================================================================================
+
+2.1 Development Environment Setup
+
+Prerequisites:
+- Node.js 18+ LTS
+- npm 9+ or yarn
+- MongoDB Atlas account (or local MongoDB 6+)
+- Aura DB account for alternative medicine suggestions
+- Git for version control
+- VS Code or equivalent IDE
+
+2.2 Project Initialization Sequence
+
+Backend Setup:
+```bash
+cd Backend
+npm install                    # Install dependencies from package.json
+cp .env.example .env          # Configure environment variables
+npm run dev                   # Start development server with nodemon (port 5000)
+```
+
+Owner Frontend Setup:
+```bash
+cd Owner_Frontend
+npm install                   # Install dependencies
+npm run dev                   # Start Vite dev server (port 5173)
+```
+
+Admin Frontend Setup:
+```bash
+cd Admin_Frontend
+npm install                   # Install dependencies
+npm run dev                   # Start Vite dev server (port 5174)
+```
+
+Database Initialization:
+```bash
+cd Backend
+./setup_db.sh                 # Linux/Mac: Creates indexes, seeds initial data
+setup_db.bat                  # Windows: Creates indexes, seeds initial data
+# Or run: node sync-db.js     # Direct Node.js execution for schema sync
+```
+
+2.3 Development Workflow
+
+1. Start MongoDB Atlas cluster and ensure connectivity
+2. Start backend server (`npm run dev` in Backend/) - runs on http://localhost:5000
+3. Start Owner Frontend (`npm run dev` in Owner_Frontend/) - runs on http://localhost:5173
+4. Start Admin Frontend (`npm run dev` in Admin_Frontend/) - runs on http://localhost:5174
+5. Access Owner Frontend for Shop Owner/Customer workflows
+6. Access Admin Frontend for Super Admin workflows
+
+2.4 Build Process for Production
+
+Backend (Node.js - no build step required):
+```bash
+cd Backend
+NODE_ENV=production npm run start
+# Or use PM2: pm2 start ecosystem.config.js
+```
+
+Owner Frontend:
+```bash
+cd Owner_Frontend
+npm run build                 # Outputs production bundle to dist/
+# Deploy dist/ to static hosting (Netlify, Vercel, AWS S3, Nginx)
+```
+
+Admin Frontend:
+```bash
+cd Admin_Frontend
+npm run build                 # Outputs production bundle to dist/
+# Deploy dist/ to static hosting
+```
+
+2.5 Running Tests (Planned)
+
+```bash
+# Backend
+cd Backend
+npm test                      # Unit and integration tests
+
+# Frontend
+cd Owner_Frontend
+npm test                      # Component and E2E tests
+```
+
+2.6 Database Management Commands
+
+```bash
+# Sync schemas and indexes
+cd Backend
+node sync-db.js
+
+# Seed development data
+node seed-data.js             # If implemented
+
+# Backup (MongoDB Atlas automated)
+# Manual: mongodump --uri=$MONGO_URI --out=./backup
+```
+
+================================================================================
+3. MODULE IMPLEMENTATION
+================================================================================
+
+3.1 Backend Architecture
+
+**Server & Config** (src/server.js, src/config/db.js): Express app with MongoDB Atlas connection pooling, CORS, JSON parsing, 13 route modules mounted at /api/*, global error handling.
+
+**Middleware** (src/middleware/): 
+- auth.js: JWT verification (protect), RBAC (authorize), optionalAuth
+- errorHandler.js: Centralized handling for validation, duplicate keys, JWT, cast errors
+- validation.js: express-validator chains for all domain entities
+
+**Models** (src/models/ - 14 Mongoose Models): User, Shop, Medicine, Order, OrderItem, CartItem, Vendor, VendorPayment, Supply, SupplyItem, ExpiryLog, Payment, Notification, Alternative. All with timestamps, virtuals, indexes, pre/post hooks.
+
+**Controllers** (src/controllers/ - 13 Domain Controllers): auth, user, shop, medicine, order, cart, vendor, supply, expiry, report, notification, system, alternative. Each handles CRUD + domain-specific logic (search, PDF, replacement, analytics).
+
+**Routes** (src/routes/ - 13 RESTful Route Files): Standard middleware chain (protect -> authorize -> validate -> controller), special routes for login, profile, cancel, PDF, replacement.
+
+**Utilities** (src/utils/): response.js (standardized API format), pdfGenerator.js (pdfkit for supply reports, invoices, financial PDFs with GST compliance).
+
+3.2 Frontend - Owner Frontend (Shop Owner + Customer)
+
+**Entry & Routing** (main.jsx, App.jsx): React 18 + BrowserRouter, public/protected routes, ProtectedRoute wrapper with role checks, Header/Sidebar layout.
+
+**State Management**: AuthContext with user, token, login/logout, localStorage persistence, axios interceptor for auth headers.
+
+**Components** (src/components/): Header (user menu, notifications), Sidebar (collapsible, animated, role-based), ProtectedRoute, MedicineCard (image, badges, stock status, actions), MedicineCardsContainer (responsive grid).
+
+**Pages** (src/pages/ - 9): Login, Dashboard (KPIs, Recharts), Medicines (search/filter/CRUD), Orders (status workflow, PDF), Supplies (entry + PDF), ExpiryLogs (vendor grouping, replacement), Vendors (CRUD, payments), Reports (period tabs, charts, PDF), Profile (shop/user settings).
+
+**API Layer** (services/api.js): Axios instance with interceptors, methods for all domain endpoints.
+
+3.3 Frontend - Admin Frontend (Super Admin)
+
+Mirrors Owner structure with 8 Super Admin pages: Users, Shops, Vendors, Supplies, ExpiryLogs, Reports, Notifications, Profile. Extended API client for system-wide endpoints.
+
+3.4 Database Implementation
+
+**Indexes** (sync-db.js): Compound unique on shopId+codeNumber, text search on medicine names, expiryDate, quantityInStock, orderDate, vendorId+status for replacement queries.
+
+**Schema Features**: Timestamps, soft delete (isActive), virtuals (isLowStock, isExpired, profitMargin), pre-save validation (manufactureDate <= expiryDate), embedded subdocuments for OrderItem, SupplyItem.
+
+3.5 Authentication & Authorization
+
+**JWT**: 24h expiry, payload {id, role, shopId}, stored in localStorage, axios interceptor attaches Authorization header.
+
+**Passwords**: bcryptjs 12 rounds.
+
+**RBAC**: Backend middleware authorize(roles) with shopId scoping for shop_owner; Frontend ProtectedRoute with role prop.
+
+3.6 Core Feature Logic
+
+**Inventory**: 6 medicine types, 3 medical systems, derived quantityUnits, codeNumber uniqueness per shop, text search, real-time stock updates.
+
+**Orders & Cart**: Persistent CartItem with stock validation, atomic order creation with stock deduction, status workflow, cancellation restores stock.
+
+**Expiry & Replacement**: Query expired medicines, ExpiryLog with vendor ref, vendor-wise grouping, status workflow (expired -> requested -> replaced/disposed).
+
+**Supply & PDF**: Code lookup, auto stock increment, pdfkit supplier PDFs with itemized tables, GST details.
+
+**Alternatives**: Aura DB queries with similarity scoring, availability check, manual fallback mappings.
+
+**Reporting**: Revenue/COGS/Profit calculations, vendor/customer payment aggregation, Day/Week/Month/Year/Custom periods, PDF export.
+
+**Notifications**: Triggered on no-search-results + no-alternatives, in-app center with read/unread management.
+
+================================================================================
+4. SOFTWARE REQUIREMENTS
+================================================================================
+
+4.1 Development Environment
+
+Runtime Environments:
+- Node.js 18.x LTS (JavaScript runtime for backend)
+- npm 9.x or yarn (Package manager)
+- MongoDB 6.x (Database server - local or Atlas)
+- Modern web browser (Chrome 100+, Firefox 100+, Edge 100+, Safari 15+)
+
+Development Tools:
+- VS Code / WebStorm / IntelliJ IDEA (IDE)
+- Git 2.x (Version control)
+- Postman / Insomnia (API testing)
+- MongoDB Compass (Database GUI)
+- Docker 20.x+ (Containerization - optional)
+
+4.2 Backend Dependencies (package.json)
+
+Production Dependencies:
+- express ^4.18.2 - Web application framework
+- mongoose ^8.0.0 - MongoDB object modeling
+- dotenv ^16.3.1 - Environment variable loading
+- bcryptjs ^2.4.3 - Password hashing
+- jsonwebtoken ^9.0.2 - JWT authentication
+- cors ^2.8.5 - Cross-origin resource sharing
+- express-validator ^7.0.1 - Request validation
+- pdfkit ^0.13.0 - PDF document generation
+- express-async-handler ^1.2.0 - Async error handling wrapper
+
+Development Dependencies:
+- nodemon ^3.0.1 - Development server with hot reload
+
+4.3 Frontend Dependencies (Owner & Admin Frontend package.json)
+
+Production Dependencies:
+- react ^18.2.0 - UI component library
+- react-dom ^18.2.0 - React DOM renderer
+- react-router-dom ^6.8.0 - Client-side routing
+- bootstrap ^5.2.3 - CSS framework
+- @popperjs/core ^2.11.6 - Positioning engine for Bootstrap
+- framer-motion ^10.12.0 - Animations
+- jquery ^3.7.0 - DOM utilities
+- react-icons ^4.8.0 - Icon library
+- axios ^1.3.0 - HTTP client
+- recharts ^2.10.3 (Owner) / ^3.10.1 (Admin) - Data visualization
+
+Development Dependencies:
+- @vitejs/plugin-react ^4.0.0 - Vite React plugin
+- vite ^4.3.0 - Build tool and dev server
+
+4.4 Database Requirements
+
+Primary Database:
+- MongoDB Atlas M10+ cluster (2GB+ storage, 2 vCPU)
+- Or self-hosted MongoDB 6.x with replica set
+- Database name: pharmacy (configurable via MONGO_URI)
+
+Alternative Database:
+- Aura DB (Neo4j cloud) for alternative medicine graph
+- Or self-hosted Neo4j 5.x
+- Connection via Bolt protocol
+
+4.5 External Services (Optional/Planned)
+
+Email Service:
+- SMTP provider (SendGrid, Mailgun, AWS SES, Gmail SMTP)
+- For: Welcome emails, credential delivery, notifications
+
+File Storage:
+- Local filesystem (development)
+- Cloud storage (AWS S3, Google Cloud Storage) for production PDFs
+
+Monitoring:
+- APM: New Relic, DataDog, or Prometheus+Grafana
+- Logging: Winston/Pino with centralized aggregation
+- Uptime: Pingdom, UptimeRobot
+
+4.6 Operating System Support
+
+Development: Windows 10/11, macOS 12+, Ubuntu 20.04+
+Production: Linux (Ubuntu 22.04 LTS, Amazon Linux 2, Debian 11+)
+
+4.7 Network Requirements
+
+- HTTPS/TLS 1.2+ for production API communication
+- Port 5000 for backend API (configurable via PORT env)
+- Port 5173/5174 for frontend dev servers
+- Port 80/443 for production frontend (via Nginx/load balancer)
+- MongoDB Atlas: Port 27017 (whitelisted IPs)
+- Aura DB: Bolt port 7687 (whitelisted IPs)
+
+================================================================================
+5. HARDWARE REQUIREMENTS
+================================================================================
+
+5.1 Development Machine Minimum Specifications
+
+CPU: 4 cores (Intel i5 / AMD Ryzen 5 / Apple M1+)
+RAM: 8 GB (16 GB recommended for concurrent services)
+Storage: 20 GB free space (SSD recommended)
+- Node.js + npm: ~500 MB
+- MongoDB local (if used): ~2 GB
+- Project dependencies: ~2 GB (node_modules x3)
+- Build outputs: ~500 MB
+- OS and tools: ~10 GB
+
+Display: 1920x1080 minimum (for multi-window development)
+Network: Stable internet for MongoDB Atlas, Aura DB, npm registry
+
+5.2 Production Server Specifications
+
+Backend Server (per instance):
+- CPU: 2+ vCPU cores
+- RAM: 4 GB minimum (8 GB recommended)
+- Storage: 20 GB SSD (OS + application + logs)
+- Network: 1 Gbps, static IP or load balancer target
+- OS: Ubuntu 22.04 LTS / Amazon Linux 2 / Debian 11+
+
+Horizontal Scaling:
+- Minimum 2 instances behind load balancer for HA
+- PM2 cluster mode for multi-core utilization
+- Session affinity not required (stateless JWT)
+
+Frontend Hosting (Static Files):
+- CDN: CloudFront, Cloudflare, Netlify Edge, Vercel Edge
+- Origin: S3 bucket, Netlify, Vercel, or Nginx server
+- Storage: < 100 MB for production builds
+- Bandwidth: Depends on user traffic
+
+Database (MongoDB Atlas):
+- M10 Cluster: 2 GB storage, 2 vCPU, 2 GB RAM (starting)
+- M20/M30 for production: 10-40 GB storage, 4-8 vCPU
+- Auto-scaling enabled for storage
+- Backup: Continuous backup with point-in-time recovery
+- Region: Same as application servers for latency
+
+Alternative DB (Aura DB):
+- AuraDB Professional: 4 GB memory, 2 vCPU (starting)
+- Scale based on graph query complexity and data volume
+
+5.3 Network Infrastructure
+
+Load Balancer:
+- Application Load Balancer (AWS ALB, GCP Cloud Load Balancing, Azure LB)
+- SSL termination at load balancer
+- Health checks on /api/health endpoint
+- WebSocket support for real-time features (planned)
+
+Firewall/Security Groups:
+- Backend: Inbound 5000 from LB only
+- MongoDB: Inbound 27017 from backend servers only
+- Aura DB: Inbound 7687 from backend servers only
+- Frontend: Inbound 80/443 from internet
+- Outbound: HTTPS for external APIs, email services
+
+DNS:
+- A/AAAA records for api.pharmacy.example.com -> LB
+- CNAME for pharmacy.example.com -> CDN
+- SSL certificates: Let's Encrypt or managed certs
+
+5.4 Backup & Disaster Recovery
+
+Database Backups:
+- MongoDB Atlas: Continuous backup (default), daily snapshots
+- Point-in-time recovery: 1-hour granularity
+- Cross-region replication for DR
+
+Application Backups:
+- Source code: Git repository (GitHub/GitLab/Bitbucket)
+- Container images: Docker registry (ECR, GCR, Docker Hub)
+- Configuration: Version-controlled .env templates, secrets in vault
+
+RTO/RPO Targets:
+- RTO (Recovery Time Objective): < 1 hour
+- RPO (Recovery Point Objective): < 1 hour (MongoDB continuous backup)
+
+5.5 Monitoring & Alerting Infrastructure
+
+Metrics Collection:
+- Prometheus node exporter on servers
+- Application metrics via Prometheus client
+- MongoDB Atlas built-in metrics
+
+Alerting Rules:
+- CPU > 80% for 5 minutes
+- Memory > 85% for 5 minutes
+- Disk > 80% usage
+- API error rate > 5%
+- Response time p95 > 2 seconds
+- Database connection pool exhaustion
+- Failed deployment alerts
+
+Log Aggregation:
+- Centralized logging (ELK/EFK, Loki, CloudWatch, DataDog)
+- Structured JSON logs from application
+- Retention: 30 days hot, 1 year archive
+
+================================================================================
+END OF DOCUMENT
+================================================================================

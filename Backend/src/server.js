@@ -1,5 +1,17 @@
+console.log("===== SERVER.JS LOADED =====");
+
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
+require('dotenv').config({
+  path: path.join(__dirname, '..', '.env')
+});
+
+console.log("ENV FILE:", path.join(__dirname, '..', '.env'));
+console.log(
+  "MONGO HOST:",
+  process.env.MONGO_URI?.split('@')[1] || "MONGO_URI NOT FOUND"
+);
+
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');

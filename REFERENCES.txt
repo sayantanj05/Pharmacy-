@@ -1,0 +1,104 @@
+REFERENCES
+Pharmacy Stock & Expiry Tracker Real-Time Application
+
+Version: 1.0
+Date: 2026-11-13
+Status: Final
+
+================================================================================
+PROJECT DOCUMENTATION
+================================================================================
+
+1. Software Requirements Specification (SRS.md) - Functional and non-functional requirements, user roles, system scope, and acceptance criteria
+2. System Analysis and Design (SYSTEM_ANALYSIS_AND_DESIGN.txt) - Architecture, database design, DFDs, sequence diagrams, API design, security, deployment
+3. Implementation Guide (IMPLEMENTATION.txt) - Module implementation details, setup procedures, configuration, deployment steps
+4. Methodology Document (METHODOLOGY.txt) - Agile Scrum process, requirements engineering, design methodology, testing strategy, risk management
+5. Testing and Debugging (TESTING_AND_DEBUGGING.txt) - Test types, test cases, execution results, conclusion
+6. Entity Relationship Diagram - NoSQL/MongoDB (ERD_NoSQL.md) - Collection schemas, relationships, indexes
+7. Data Flow Diagrams (DFD.md) - Context diagram, Level 1 decomposition, Level 2 detailed flows
+8. Use Case Diagram (UseCaseDiagram.md) - Actors, use cases, relationships (include/extend), descriptions
+9. Sequence Diagrams (Sequence_Diagram.md) - 15 sequence diagrams for core workflows
+10. CRUD Operations by Role (CRUD_Operations.md) - Permission matrix for Customer, Shop Owner, Super Admin
+11. Project Phases (Phases.md) - Development phase breakdown and milestones
+
+================================================================================
+TECHNICAL SPECIFICATIONS & STANDARDS
+================================================================================
+
+12. REST API Design Guidelines - Microsoft REST API Guidelines / Google API Design Guide
+13. OpenAPI 3.0 Specification - API documentation standard
+14. JWT (RFC 7519) - JSON Web Token for authentication
+15. bcrypt Password Hashing - OpenBSD bcrypt algorithm specification
+16. MongoDB Data Modeling - MongoDB official documentation on schema design
+17. Mongoose ODM Documentation - Schema definitions, validation, middleware, virtuals
+18. React 18 Documentation - Hooks, Context, Router, component patterns
+19. Express.js 4.x Guide - Middleware, routing, error handling
+20. Node.js 18 LTS Documentation - Runtime, modules, clustering
+21. Bootstrap 5.2 Components - UI framework documentation
+22. pdfkit Documentation - PDF generation API
+23. Recharts Documentation - Data visualization components
+24. Framer Motion Documentation - Animation library
+25. Vite 4.3 Build Tool - Development server, build configuration
+
+================================================================================
+DATABASE & INFRASTRUCTURE
+================================================================================
+
+26. MongoDB Atlas Documentation - Cloud database clusters, indexing, backup, monitoring
+27. Aura DB (Neo4j) Documentation - Graph database for alternative medicine relationships
+28. Docker Documentation - Containerization, Docker Compose, multi-stage builds
+29. Nginx Configuration Guide - Reverse proxy, SSL termination, load balancing
+30. PM2 Process Manager - Production Node.js process management
+31. Git Version Control - Branching strategy, commit conventions, merge workflows
+
+================================================================================
+TESTING & QUALITY ASSURANCE
+================================================================================
+
+32. Jest Testing Framework - Unit and integration testing
+33. Playwright / Cypress - End-to-end testing automation
+34. ESLint (Airbnb Config) - JavaScript/React linting standards
+35. Prettier - Code formatting
+35. npm audit / OWASP Dependency Check - Security vulnerability scanning
+36. Test Pyramid Strategy - Mike Cohn's testing distribution model
+
+================================================================================
+EXTERNAL RESOURCES & LIBRARIES
+================================================================================
+
+37. Node.js Package Dependencies (Backend/package.json):
+    - express ^4.18.2, mongoose ^8.0.0, dotenv ^16.3.1
+    - bcryptjs ^2.4.3, jsonwebtoken ^9.0.2, cors ^2.8.5
+    - express-validator ^7.0.1, pdfkit ^0.13.0, express-async-handler ^1.2.0
+
+38. Frontend Dependencies (Owner_Frontend/package.json, Admin_Frontend/package.json):
+    - react ^18.2.0, react-dom ^18.2.0, react-router-dom ^6.8.0
+    - bootstrap ^5.2.3, @popperjs/core ^2.11.6
+    - framer-motion ^10.12.0, jquery ^3.7.0
+    - react-icons ^4.8.0, axios ^1.3.0, recharts ^2.10.3/3.10.1
+
+39. Development Dependencies:
+    - nodemon ^3.0.1, @vitejs/plugin-react ^4.0.0, vite ^4.3.0
+
+================================================================================
+INDUSTRY STANDARDS & BEST PRACTICES
+================================================================================
+
+40. OWASP Top 10 - Web application security risks
+41. GDPR / HIPAA Compliance Guidelines - Data privacy for healthcare applications
+42. GST India Compliance - Invoice/PDF format requirements for pharmaceutical supply
+43. JIT Inventory Management Principles - Toyota Production System concepts
+44. Pharmacy Inventory Management Best Practices - FIFO, expiry tracking, minimum stock levels
+45. Role-Based Access Control (RBAC) Model - NIST RBAC standard
+46. 12-Factor App Methodology - Cloud-native application design principles
+47. Semantic Versioning 2.0.0 - Version numbering scheme
+
+================================================================================
+ACADEMIC & REFERENCE MATERIALS
+================================================================================
+
+48. Pressman, R.S. "Software Engineering: A Practitioner's Approach" - SDLC, testing, requirements
+49. Sommerville, I. "Software Engineering" - System modeling, architecture, evolution
+50. Fowler, M. "Patterns of Enterprise Application Architecture" - Layered architecture, domain logic
+51. Martin, R.C. "Clean Architecture" - Dependency rule, use cases, entities
+52. Vernon, V. "Implementing Domain-Driven Design" - Bounded contexts, aggregates, repositories

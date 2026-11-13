@@ -98,11 +98,39 @@ exports.cancelOrder = async (req, res, next) => {
       res.status(403);
       throw new Error('Not authorized');
     }
+    if (req.user.role === 'shop_owner' && order.shopId.toString() !== req.user.shopId.toString()) {
+      res.status(403);
+      throw new Error('Not authorized');
+    }
     order.status = 'cancelled';
     order.cancelledAt = new Date();
     order.cancellationReason = req.body.reason || '';
     await order.save();
     sendResponse(res, 200, true, 'Order cancelled');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateOrderStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    if (!status) {
+      res.status(400);
+      throw new Error('Status is required');
+    }
+    let filter = { _id: req.params.id };
+    if (req.user.role === 'shop_owner') {
+      filter.shopId = req.user.shopId;
+    } else if (req.user.role === 'customer') {
+      filter.customerId = req.user._id;
+    }
+    const order = await Order.findOneAndUpdate(filter, { status }, { new: true });
+    if (!order) {
+      res.status(404);
+      throw new Error('Order not found');
+    }
+    sendResponse(res, 200, true, 'Order status updated', { order });
   } catch (error) {
     next(error);
   }

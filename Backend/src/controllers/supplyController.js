@@ -57,7 +57,11 @@ exports.createSupply = async (req, res, next) => {
 
 exports.updateSupply = async (req, res, next) => {
   try {
-    const supply = await Supply.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    let filter = { _id: req.params.id };
+    if (req.user.role === 'shop_owner') {
+      filter.shopId = req.user.shopId;
+    }
+    const supply = await Supply.findOneAndUpdate(filter, req.body, { new: true });
     if (!supply) {
       res.status(404);
       throw new Error('Supply not found');
@@ -70,7 +74,11 @@ exports.updateSupply = async (req, res, next) => {
 
 exports.deleteSupply = async (req, res, next) => {
   try {
-    const supply = await Supply.findByIdAndDelete(req.params.id);
+    let filter = { _id: req.params.id };
+    if (req.user.role === 'shop_owner') {
+      filter.shopId = req.user.shopId;
+    }
+    const supply = await Supply.findOneAndDelete(filter);
     if (!supply) {
       res.status(404);
       throw new Error('Supply not found');

@@ -75,9 +75,9 @@ const Cart = ({ user }) => {
                 {cartItems.map((item) => (
                   <tr key={item._id}>
                     <td>{item.medicineId?.name || 'Unknown'}</td>
-                    <td>${item.medicineId?.price || 0}</td>
+                    <td>₹{item.medicineId?.price || 0}</td>
                     <td>{item.quantity}</td>
-                    <td>${(item.medicineId?.price || 0) * item.quantity}</td>
+                    <td>₹{(item.medicineId?.price || 0) * item.quantity}</td>
                     <td>
                       <button className="btn btn-sm btn-outline-danger" onClick={() => removeFromCart(item._id)}>
                         <FaTrash />
@@ -89,7 +89,7 @@ const Cart = ({ user }) => {
             </table>
           </div>
           <div className="d-flex justify-content-between align-items-center mt-4">
-            <h4>Total: ${total.toFixed(2)}</h4>
+            <h4>Total: ₹{total.toFixed(2)}</h4>
             <button className="btn btn-success btn-lg" onClick={checkout}>
               Proceed to Checkout
             </button>

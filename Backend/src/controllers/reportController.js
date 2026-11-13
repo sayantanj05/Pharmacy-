@@ -16,7 +16,7 @@ exports.getFinancialReport = async (req, res, next) => {
     if (endDate) filter.createdAt = { ...filter.createdAt, $lte: new Date(endDate) };
     const orders = await Order.find(filter);
     const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-    sendResponse(res, 200, true, 'Financial report fetched', { totalRevenue, orders });
+    res.status(200).json({ totalRevenue, orders });
   } catch (error) {
     next(error);
   }

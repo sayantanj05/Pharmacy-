@@ -1,0 +1,262 @@
+# Comprehensive Prompt for Generating a Professional Use Case Diagram
+
+## Role & Objective
+You are a Senior Systems Analyst and UML expert. Your task is to generate a complete, professional-grade Use Case Diagram for a **customer-centric system** based on the provided system context. The output must be rigorous, structured, and directly renderable in standard tools (PlantUML, Mermaid.js) or usable as a detailed specification for manual drawing.
+
+---
+
+## Input Context (User Must Provide)
+Before generating the diagram, you must ask the user to provide (or confirm) the following:
+1. **System Name & Boundary**: Exact name of the system/subsystem.
+2. **Primary Business Domain**: e.g., E-commerce, Healthcare Patient Portal, Banking, Logistics Tracking.
+3. **Key User Roles (Actors)**: List of all human/user roles interacting with the system (e.g., Customer, Admin, Support Agent, Vendor, Auditor).
+4. **External Systems (Secondary Actors)**: List of all external systems/services (e.g., Payment Gateway, Email/SMS Service, Identity Provider, ERP, CRM, Shipping Carrier API).
+5. **Core Functional Areas**: High-level modules (e.g., Account Management, Order Processing, Inventory, Notifications, Reporting, Administration).
+6. **Specific Business Rules/Constraints**: Any rules that create `extend` or `include` relationships (e.g., "Payment must be verified before Order Confirmation", "2FA required for Admin login").
+7. **Output Format Preference**: `PlantUML`, `Mermaid.js`, or `Structured Descriptive List`.
+
+---
+
+## Instructions for AI: Step-by-Step Execution
+
+### Phase 1: Actor Identification & Classification
+**Identify and categorize every actor.** Do not guess; if the user input is ambiguous, ask clarifying questions.
+
+**Primary Actors (Human, initiate use cases to achieve goals):**
+- For each role: Name, Description, Goal(s) relative to the system.
+- Identify **Generalization** hierarchies (e.g., `Registered User` <|-- `Customer`, `Admin`; `Support Agent` <|-- `Admin`).
+
+**Secondary Actors (External Systems, provide services/react to system):**
+- For each system: Name, Technology/Protocol (REST, gRPC, Message Queue), Responsibility (e.g., "Processes payment", "Sends transactional email").
+- Identify if any secondary actor *initiates* a use case (e.g., Webhook from Payment Gateway -> `Handle Payment Callback`).
+
+**Output Format (Internal/Intermediate):**
+```markdown
+### Actor Catalog
+**Primary Actors:**
+1. **Actor Name**: [Description, Goals]
+   - Generalization: [Parent Actor if any]
+
+**Secondary Actors (External Systems):**
+1. **System Name**: [Protocol, Responsibility]
+   - Initiates Use Case?: [Yes/No - Use Case Name]
+```
+
+---
+
+### Phase 2: Use Case Discovery & Definition
+**Derive use cases from Actor Goals & Functional Areas.** Use the **User Goal Level** (not sub-function or summary level).
+
+**For EACH Use Case, define:**
+1. **Unique ID**: `UC-XXX` (e.g., UC-001).
+2. **Name**: Verb-Noun format (e.g., `Place Order`, `View Order History`).
+3. **Brief Description**: One sentence, outcome-oriented.
+4. **Primary Actor**: Who initiates.
+5. **Secondary Actors**: Systems involved.
+6. **Preconditions**: System state required before start.
+7. **Postconditions (Success)**: State after successful completion.
+8. **Postconditions (Failure/Alternate)**: State on failure.
+9. **Main Success Scenario (Flow)**: Numbered steps (Actor Action -> System Response).
+10. **Extensions/Alternate Flows**: Labeled `E1`, `E2`... referencing step numbers.
+11. **Non-Functional Requirements**: Performance, Security, Usability specific to this UC.
+12. **Business Rules**: Constraints enforced.
+
+**Organize by Functional Package/Subject** (e.g., `Account Management`, `Ordering`, `Administration`).
+
+---
+
+### Phase 3: Relationship Modeling
+**Explicitly define all structural relationships between Use Cases and Actors.**
+
+| Relationship | Stereotype | When to Apply | Notation Rule |
+| :--- | :--- | :--- | :--- |
+| **Association** | (none) | Actor participates in UC. | Solid line. |
+| **Generalization (Actor)** | (none) | Child actor inherits parent's UCs + adds own. | Solid line, hollow triangle arrow to parent. |
+| **Generalization (UC)** | (none) | Child UC specializes parent (adds steps/rules). | Solid line, hollow triangle arrow to parent. |
+| **Include** | `<<include>>` | **Mandatory** reuse: Base UC *always* executes Included UC. Base UC is incomplete without it. | Dashed arrow **from Base to Included**, label `<<include>>`. |
+| **Extend** | `<<extend>>` | **Optional/Conditional** behavior: Extension UC adds behavior to Base UC at an **Extension Point** under specific conditions. Base UC is complete alone. | Dashed arrow **from Extension to Base**, label `<<extend>>`. Note condition/extension point. |
+| **Dependency** | `<<dependency>>` | Weak coupling (e.g., UC uses artifact). | Dashed arrow, label `<<dependency>>`. |
+
+**Critical Rules for `include` vs `extend`:**
+- **Include**: "Part of" / "Always happens". Direction: `Base --> Included`. *Example: `Place Order` <<include>> `Process Payment`.*
+- **Extend**: "Variation" / "Sometimes happens". Direction: `Extension --> Base`. *Example: `Apply Coupon` <<extend>> `Place Order` [Condition: User enters valid code].*
+- **Extension Points**: Must be named in the Base UC (e.g., `Extension Point: Payment Selection`).
+
+---
+
+### Phase 4: Structured Output Generation
+Generate the final artifact in the **user's requested format**.
+
+#### Option A: PlantUML (Most expressive for complex diagrams)
+```plantuml
+@startuml
+' === CONFIGURATION ===
+skinparam usecase {
+  BackgroundColor<<primary>> #E8F5E9
+  BackgroundColor<<secondary>> #E3F2FD
+  BackgroundColor<<include>> #FFF3E0
+  BackgroundColor<<extend>> #FCE4EC
+  ArrowColor #333
+  ActorBorderColor #333
+  UsecaseBorderColor #333
+}
+left to right direction
+' === ACTORS ===
+package "Primary Actors" {
+  actor "Customer" as Customer <<primary>>
+  actor "Admin" as Admin <<primary>>
+  ' Generalization
+  Customer <|-- RegisteredUser
+}
+package "Secondary Actors (Systems)" {
+  actor "Payment Gateway" as PG <<secondary>>
+  actor "Email Service" as ES <<secondary>>
+}
+' === USE CASES (Grouped by Package) ===
+package "Account Management" {
+  usecase "UC-001 Register Account" as UC001
+  usecase "UC-002 Login" as UC002
+  usecase "UC-003 Manage Profile" as UC003
+}
+package "Ordering" {
+  usecase "UC-010 Place Order" as UC010
+  usecase "UC-011 Process Payment" as UC011 <<include>>
+  usecase "UC-012 Apply Coupon" as UC012 <<extend>>
+}
+' === RELATIONSHIPS ===
+' Associations
+Customer --> UC001
+Customer --> UC002
+Customer --> UC003
+Customer --> UC010
+Admin --> UC003
+' Include: Place Order ALWAYS includes Process Payment
+UC010 .> UC011 : <<include>>
+' Extend: Apply Coupon EXTENDS Place Order at "Payment Selection"
+UC012 .> UC010 : <<extend>>\n[Condition: Coupon Code Entered]
+' Secondary Actor Associations
+UC011 --> PG
+UC001 --> ES
+@enduml
+```
+
+#### Option B: Mermaid.js (GitHub/Markdown native, simpler syntax)
+```mermaid
+useCaseDiagram
+    package "Primary Actors" {
+        actor Customer
+        actor Admin
+        actor RegisteredUser
+    }
+    package "Secondary Actors" {
+        actor "Payment Gateway" as PG
+        actor "Email Service" as ES
+    }
+    package "Account Management" {
+        usecase "UC-001 Register Account" as UC001
+        usecase "UC-002 Login" as UC002
+        usecase "UC-003 Manage Profile" as UC003
+    }
+    package "Ordering" {
+        usecase "UC-010 Place Order" as UC010
+        usecase "UC-011 Process Payment" as UC011
+        usecase "UC-012 Apply Coupon" as UC012
+    }
+    %% Relationships
+    Customer --> UC001
+    Customer --> UC002
+    Customer --> UC003
+    Customer --> UC010
+    Admin --> UC003
+    RegisteredUser <|-- Customer
+    %% Include (Base --> Included)
+    UC010 ..> UC011 : <<include>>
+    %% Extend (Extension --> Base)
+    UC012 ..> UC010 : <<extend>>
+    %% Secondary Actors
+    UC011 --> PG
+    UC001 --> ES
+```
+
+#### Option C: Structured Descriptive List (For Manual Drawing / Documentation)
+```markdown
+# Use Case Diagram Specification: [System Name]
+
+## 1. Actors
+### Primary Actors
+| ID | Actor Name | Description | Generalization (Parent) |
+|----|------------|-------------|-------------------------|
+| A-01 | Customer | Purchases products, manages own account | Registered User |
+| A-02 | Admin | Manages system, users, content | Registered User |
+| A-03 | Registered User | Authenticated system user | (Base) |
+
+### Secondary Actors (External Systems)
+| ID | System Name | Protocol | Responsibility | Initiates UC? |
+|----|-------------|----------|----------------|---------------|
+| SA-01 | Payment Gateway | HTTPS/REST | Authorize/Capture payments | No |
+| SA-02 | Email Service | SMTP/API | Send transactional emails | No |
+
+## 2. Use Cases (by Package)
+### Package: Account Management
+| ID | Name | Primary Actor | Secondary Actors | Description |
+|----|------|---------------|------------------|-------------|
+| UC-001 | Register Account | Customer | Email Service | Allows new user to create account via email verification. |
+| UC-002 | Login | Registered User | - | Authenticates user via credentials/2FA. |
+| UC-003 | Manage Profile | Registered User | - | View/Update personal details, preferences, password. |
+
+### Package: Ordering
+| ID | Name | Primary Actor | Secondary Actors | Description |
+|----|------|---------------|------------------|-------------|
+| UC-010 | Place Order | Customer | Payment Gateway | Select items, provide shipping, pay, confirm order. |
+| UC-011 | Process Payment | (System/Time) | Payment Gateway | **Included** by Place Order. Executes payment auth/capture. |
+| UC-012 | Apply Coupon | Customer | - | **Extends** Place Order. Applies discount at Payment Selection. |
+
+## 3. Relationships
+| Type | Source | Target | Label / Condition / Extension Point |
+|------|--------|--------|-------------------------------------|
+| Association | Customer | UC-001 | |
+| Association | Customer | UC-010 | |
+| Generalization | Registered User | Customer | |
+| Generalization | Registered User | Admin | |
+| Include | UC-010 (Place Order) | UC-011 (Process Payment) | Mandatory. Extension Point: `Payment Processing`. |
+| Extend | UC-012 (Apply Coupon) | UC-010 (Place Order) | Condition: `User enters valid coupon code`. Extension Point: `Payment Selection`. |
+| Association | UC-011 | Payment Gateway | |
+| Association | UC-001 | Email Service | |
+
+## 4. Use Case Details (Example: UC-010 Place Order)
+**Preconditions:** User logged in (UC-002), Cart not empty, Inventory available.
+**Main Success Scenario:**
+1. Customer views Cart.
+2. Customer initiates Checkout.
+3. System presents Shipping Options. Customer selects.
+4. System presents Payment Selection (**Extension Point: Payment Selection**).
+5. **<<include>> UC-011 Process Payment**.
+6. System creates Order record, clears Cart.
+7. System sends Confirmation Email (triggers UC-001 Email Service).
+8. System displays Order Confirmation.
+**Extensions:**
+- E1 (Step 4): **<<extend>> UC-012 Apply Coupon** [Condition: Coupon Code Entered].
+- E2 (Step 5): Payment Declined -> Show Error, Return to Step 4.
+**Postconditions (Success):** Order created, Payment captured, Cart empty, Email sent.
+**Postconditions (Failure):** Order not created, Cart intact, Error logged.
+```
+
+---
+
+## Quality Assurance Checklist (AI Self-Verification)
+Before outputting, verify:
+- [ ] **All Primary Actors** have at least one Association.
+- [ ] **All Secondary Actors** are connected to at least one Use Case.
+- [ ] **Generalization hierarchies** are logical (Child "is a" Parent).
+- [ ] **Every `<<include>>`** points from Base UC to Included UC (Base is incomplete without it).
+- [ ] **Every `<<extend>>`** points from Extension UC to Base UC (Base is complete alone; condition/extension point noted).
+- [ ] **No cyclic dependencies** in include/extend.
+- [ ] **Use Case Names** are Verb-Noun, User-Goal level.
+- [ ] **Packages/Subjects** group related UCs logically.
+- [ ] **Extension Points** are explicitly named in Base UC for every `extend`.
+- [ ] **Output Syntax** is valid for target tool (PlantUML `@startuml`/`@enduml`, Mermaid `useCaseDiagram`).
+
+---
+
+## Final Instruction
+**Do not output the diagram immediately.** First, acknowledge this prompt and ask the user to provide the **Input Context** (System Name, Domain, Actors, External Systems, Functional Areas, Business Rules, Output Format). Once provided, execute Phases 1-4 sequentially and deliver the final artifact in the requested format.

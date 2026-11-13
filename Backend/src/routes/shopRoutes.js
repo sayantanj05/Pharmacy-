@@ -7,7 +7,7 @@ router.post('/', protect, authorize('super_admin'), shopController.createShop);
 router.get('/', shopController.getShops);
 router.get('/current', protect, shopController.getCurrentShop);
 router.get('/:id', shopController.getShop);
-router.put('/:id', protect, authorize('super_admin'), shopController.updateShop);
+router.put('/:id', protect, authorize('shop_owner', 'super_admin'), shopController.updateShop);
 router.delete('/:id', protect, authorize('super_admin'), shopController.deleteShop);
 
 module.exports = router;

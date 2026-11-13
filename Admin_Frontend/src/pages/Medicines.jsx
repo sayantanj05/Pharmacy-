@@ -222,14 +222,14 @@ const Medicines = ({ user }) => {
                         <img 
                           src={medicine.imageUrl} 
                           alt={medicine.name} 
-                          style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }}
+                          style={{ width: '65px', height: '65px', objectFit: 'cover', borderRadius: '10px', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', border: '1px solid #f0f0f0' }}
                           onError={(e) => {
                             e.target.style.display = 'none';
-                            e.target.nextElementSibling.style.display = 'flex';
+                            if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
                           }}
                         />
                       ) : null}
-                      <div style={{ width: '50px', height: '50px', backgroundColor: '#e5e7eb', borderRadius: '8px', display: medicine.imageUrl ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#6b7280', textAlign: 'center', padding: '2px' }}>
+                      <div style={{ width: '65px', height: '65px', backgroundColor: '#f3f4f6', borderRadius: '10px', border: '1px solid #e5e7eb', display: medicine.imageUrl ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#6b7280', fontWeight: '600', textAlign: 'center', padding: '2px' }}>
                         {medicine.imageUrl ? 'Load Err' : 'No Img'}
                       </div>
                     </td>
@@ -237,7 +237,7 @@ const Medicines = ({ user }) => {
                     <td>{medicine.codeNumber}</td>
                     <td>{medicine.medicineType}</td>
                     <td>{medicine.medicineSystem}</td>
-                    <td>${medicine.price}</td>
+                    <td>₹{medicine.price}</td>
                     <td style={{ color: medicine.stock <= (medicine.minStockLevel || 10) ? '#EF4444' : 'inherit', fontWeight: medicine.stock <= (medicine.minStockLevel || 10) ? 'bold' : 'normal' }}>
                       {medicine.stock}
                     </td>

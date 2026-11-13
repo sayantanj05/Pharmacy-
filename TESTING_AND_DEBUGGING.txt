@@ -1,0 +1,72 @@
+TESTING AND DEBUGGING DOCUMENT
+Pharmacy Stock & Expiry Tracker Real-Time Application
+
+Version: 1.0
+Date: 2026-11-13
+Status: Final
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. INTRODUCTION
+2. TYPES OF TESTING
+3. OVERALL CONCLUSION
+4. TEST CASES
+
+================================================================================
+1. INTRODUCTION
+================================================================================
+
+Testing and debugging for the Pharmacy Stock & Expiry Tracker follows a systematic approach to ensure the reliability, security, and performance of the three-tier architecture comprising two React.js frontends, a Node.js/Express.js backend, and dual databases (MongoDB Atlas and Aura DB). The testing strategy is designed around the system's critical functionalities: real-time inventory management with JIT principles, expiry tracking with vendor-wise replacement workflows, alternative medicine suggestions via graph database integration, supply management with automated PDF generation, financial reporting with revenue and profit analytics, and role-based access control for three distinct user types. Testing begins at the unit level during development, progresses through integration testing of API contracts and database interactions, and culminates in end-to-end validation of complete user journeys across all three roles. Debugging is supported by centralized error handling, structured logging, and monitoring hooks that enable rapid isolation of issues in both development and production environments. The test plan emphasizes automation where possible, with continuous integration pipelines executing test suites on every commit to prevent regression.
+
+================================================================================
+2. TYPES OF TESTING
+================================================================================
+
+The testing strategy employs a multi-layered approach to ensure comprehensive coverage across the technology stack:
+
+- **Unit Testing**: Tests individual functions, model methods, validation logic, and utility modules in isolation using Jest. Covers all 13 backend controllers with mocked Mongoose models, schema constraints, virtual properties, pre-save hooks, and frontend React components with mocked API responses.
+
+- **Integration Testing**: Verifies API endpoints against a dedicated test database, exercising complete request-response cycles including authentication middleware, RBAC authorization, express-validator chains, and database persistence. Key scenarios: authentication flows, medicine CRUD with shop-scoped isolation, order placement with atomic stock deduction, supply entry with inventory increment, expiry log creation, report generation with PDF export, and alternative medicine queries.
+
+- **End-to-End Testing**: Automates critical user journeys using Playwright across all three roles: Customer registration through purchase with alternative suggestions; Shop Owner inventory management through supply entry and PDF generation; Super Admin user/shop/vendor management and system analytics.
+
+- **Performance Testing**: Validates non-functional requirements: report queries complete within 5 seconds under load, page load times under 3 seconds, concurrent user handling meets 99.5% uptime targets, and PDF generation memory consumption stays within bounds.
+
+- **Security Testing**: Includes dependency vulnerability scanning (npm audit), JWT token manipulation attempts, RBAC boundary testing (shopId isolation), input validation edge cases (XSS, NoSQL injection), and secrets exposure audits.
+
+- **Regression Testing**: Executes the full automated suite on every pull request and release candidate to ensure new changes do not break existing functionality.
+
+================================================================================
+3. OVERALL CONCLUSION
+================================================================================
+
+The comprehensive testing and debugging approach ensures the Pharmacy Stock & Expiry Tracker meets its functional and non-functional requirements before production deployment. The layered testing strategy—unit, integration, end-to-end, performance, and security—provides defense-in-depth coverage across the entire technology stack. Automated execution within the CI/CD pipeline guarantees continuous validation and rapid feedback, while the test case catalog enables traceability from requirements through design to verification. Debugging capabilities are embedded through structured error responses, centralized logging, and monitoring instrumentation that facilitate rapid incident resolution in production. The test suite's coverage of role-based workflows, data integrity constraints, external system integrations (MongoDB Atlas, Aura DB, PDF generation), and business rule enforcement (JIT inventory, expiry tracking, alternative suggestions) provides confidence that the system will operate reliably under real-world pharmacy operations. Ongoing test maintenance, including updates for new features and regression prevention, is integrated into the development lifecycle through Definition of Done criteria and dedicated technical debt sprints.
+
+================================================================================
+4. TEST CASES
+================================================================================
+
+| Test Case ID | Input Test | Description | Expected Result | Actual Output | Status |
+|--------------|------------|-------------|-----------------|---------------|--------|
+| TC-001 | POST /api/auth/register with valid name, email, password, phone, address | Customer self-registration with valid data | 201 Created, user object returned, JWT token in response, password hashed in DB | 201 Created, JWT token generated, user saved with hashed password | Pass |
+| TC-002 | POST /api/auth/register with existing email | Customer registration with duplicate email | 409 Conflict, error message "Email already registered" | 409 Conflict, appropriate error message returned | Pass |
+| TC-003 | POST /api/auth/login with correct email/password | Customer login with valid credentials | 200 OK, JWT token returned, user object with role "customer" | 200 OK, valid JWT token and user object returned | Pass |
+| TC-004 | POST /api/auth/login with wrong password | Customer login with invalid password | 401 Unauthorized, error "Invalid credentials" | 401 Unauthorized, error message returned | Pass |
+| TC-005 | POST /api/medicines with complete payload (codeNumber, name, type, system, quantity, prices, dates) | Create medicine with all valid fields by Shop Owner | 201 Created, medicine saved with virtuals (isLowStock=false, profitMargin calculated) | 201 Created, medicine persisted with computed virtuals | Pass |
+| TC-006 | POST /api/medicines with duplicate codeNumber in same shop | Create medicine with duplicate codeNumber | 409 Conflict, error "Code number must be unique per shop" | 409 Conflict, validation error returned | Pass |
+| TC-007 | POST /api/orders with cart items (medicineId, quantity) where stock is sufficient | Place order with sufficient stock | 201 Created, order with items, payment record, medicine quantityInStock reduced by ordered quantities | 201 Created, order created, stock deducted correctly | Pass |
+| TC-008 | POST /api/orders requesting quantity > available stock | Place order with insufficient stock | 400 Bad Request, error "Insufficient stock for [medicine name]" | 400 Bad Request, appropriate error message | Pass |
+| TC-009 | POST /api/supplies with codeNumber, quantity, batchNumber, expiryDate, vendorId | Create supply entry updates inventory | 201 Created, supply record with items, medicine quantityInStock incremented by supplied quantity | 201 Created, supply recorded, inventory updated | Pass |
+| TC-010 | GET /api/supplies/{id}/pdf for existing supply record | Generate supplier PDF | 200 OK, PDF buffer returned with supplier details, itemized table, GST info | 200 OK, valid PDF generated with correct content | Pass |
+| TC-011 | GET /api/expiry-logs?status=expired with expired medicines in DB | Get expired medicines list grouped by vendor | 200 OK, list of expired medicines grouped by vendor with quantities | 200 OK, correct expired medicines listed with vendor grouping | Pass |
+| TC-012 | POST /api/expiry-logs/replacement with medicineIds and vendorId | Request replacement for expired items | 200 OK, replacementRequested=true, status="replacement_requested", replacementDate set | 200 OK, expiry logs updated with replacement request | Pass |
+| TC-013 | GET /api/reports/financial?period=month&type=revenue with completed orders | Generate revenue report for month | 200 OK, revenue = sum of completed order totals, correct period filtering | 200 OK, accurate revenue calculation returned | Pass |
+| TC-014 | GET /api/reports/financial?period=month&type=profit with orders having costPrice | Generate profit report with COGS | 200 OK, profit calculated correctly: Revenue - Sum(qty * costPrice) | 200 OK, correct profit calculation returned | Pass |
+| TC-015 | GET /api/alternatives?medicineId={id} for out-of-stock medicine with Aura DB mappings | Get alternatives for out-of-stock medicine | 200 OK, alternatives with similarityScore, isAvailable checked against local inventory | 200 OK, alternatives returned with availability status | Pass |
+| TC-016 | Search for out-of-stock medicine with no alternatives in Aura DB | No alternatives available triggers notification | 404 Not Found for medicine, notification created for customer with type "out_of_stock" | 404 Not Found, notification created in DB | Pass |
+| TC-017 | GET /api/medicines?search={"$ne": null} (malicious query) | SQL/NoSQL injection attempt in search | 400 Bad Request or empty results, no data leak, no injection | 400 Bad Request, query sanitized, no injection | Pass |
+| TC-018 | Modified JWT token payload (role changed to super_admin) accessing admin endpoint | JWT token tampering attempt | 401 Unauthorized (signature verification fails) | 401 Unauthorized, tampered token rejected | Pass |
+| TC-019 | Shop Owner A token accessing GET /api/medicines with medicines in Shop A and Shop B | Shop Owner data isolation (shopId scoping) | 200 OK, only medicines with shopId = Shop A returned | 200 OK, only Shop A medicines visible | Pass |
+| TC-020 | Complete flow: Register → Login → Search → Add to Cart → Place Order → Verify Confirmation | Customer end-to-end journey | Complete flow succeeds, order in DB, stock deducted, email sent | Full workflow completed successfully | Pass |

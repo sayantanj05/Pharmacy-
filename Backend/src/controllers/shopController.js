@@ -34,7 +34,11 @@ exports.getShop = async (req, res, next) => {
 
 exports.updateShop = async (req, res, next) => {
   try {
-    const shop = await Shop.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    let filter = { _id: req.params.id };
+    if (req.user.role === 'shop_owner') {
+      filter = { _id: req.user.shopId };
+    }
+    const shop = await Shop.findOneAndUpdate(filter, req.body, { new: true });
     if (!shop) {
       res.status(404);
       throw new Error('Shop not found');

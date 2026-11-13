@@ -6,8 +6,6 @@
 erDiagram
     USERS ||--o| ORDERS : places
     USERS ||--o| PAYMENTS : makes
-    USERS ||--o{ NOTIFICATIONS : receives
-    USERS ||--o{ CART_ITEMS : has in cart
     USERS {
         ObjectId _id
         string name
@@ -20,37 +18,15 @@ erDiagram
         date updatedAt
     }
 
-    SHOPS ||--o{ USERS : employs
-    SHOPS ||--o{ MEDICINES : stocks
-    SHOPS {
-        ObjectId _id
-        string shopName
-        string address
-        string phone
-        string email
-        string gstNumber
-        boolean isActive
-        date createdAt
-        date updatedAt
-    }
-
     MEDICINES ||--o{ ORDER_ITEMS : "ordered in"
     MEDICINES ||--o{ EXPIRY_LOGS : "tracked in"
-    MEDICINES ||--o{ ALTERNATIVES : "has alternatives"
+    MEDICINES ||--o| ALTERNATIVES : "has alternative"
     MEDICINES }|--|| VENDORS : "supplied by"
-    MEDICINES }|--|| SHOPS : "belongs to"
     MEDICINES {
         ObjectId _id
-        ObjectId shopId
         string name
         string genericName
         string category
-        string medicineType
-        string quantityUnit
-        string medicineSystem
-        string codeNumber
-        string imageUrl
-        date manufactureDate
         string manufacturer
         ObjectId vendorId
         string batchNumber
@@ -146,48 +122,12 @@ erDiagram
         boolean isAvailable
         date createdAt
     }
-
-    NOTIFICATIONS {
-        ObjectId _id
-        ObjectId userId
-        string type
-        string title
-        string message
-        ObjectId medicineId
-        boolean isRead
-        date createdAt
-    }
-
-    SUPPLIES {
-        ObjectId _id
-        ObjectId medicineId
-        string codeNumber
-        number quantitySupplied
-        string batchNumber
-        date expiryDate
-        ObjectId supplierId
-        date supplyDate
-        boolean pdfGenerated
-        string pdfUrl
-        date createdAt
-    }
-
-    CART_ITEMS {
-        ObjectId _id
-        ObjectId userId
-        ObjectId medicineId
-        string medicineName
-        number quantity
-        number unitPrice
-        date createdAt
-        date updatedAt
-    }
 ```
 
 ## Collection Schemas (JSON Document Structure)
 
 ### 1. Users Collection
-Stores all user types (Customer, Shop Owner, Super Admin). Shop owners are created by Super Admin and linked to a shop.
+Stores all user types (Customer, Shop Owner, Super Admin).
 
 ```json
 {
@@ -195,31 +135,14 @@ Stores all user types (Customer, Shop Owner, Super Admin). Shop owners are creat
   "name": "John Doe",
   "email": "john@example.com",
   "passwordHash": "bcrypt_hash",
-  "role": "shop_owner",
+  "role": "customer",
   "phone": "+91-9876543210",
-  "shopId": { "$oid": "shop_id" },
-  "isActive": true,
-  "createdAt": { "$date": "2026-08-29T00:00:00Z" },
-  "updatedAt": { "$date": "2026-08-29T00:00:00Z" }
-}
-```
-
-### 2. Shops Collection
-Stores shop details registered by Super Admin.
-
-```json
-{
-  "_id": { "$oid": "..." },
-  "shopName": "ABC Pharmacy",
   "address": {
     "street": "123 Main St",
     "city": "Mumbai",
     "state": "Maharashtra",
     "pincode": "400001"
   },
-  "phone": "+91-9876543210",
-  "email": "abcpharmacy@example.com",
-  "gstNumber": "GST123456789",
   "isActive": true,
   "createdAt": { "$date": "2026-08-29T00:00:00Z" },
   "updatedAt": { "$date": "2026-08-29T00:00:00Z" }
@@ -232,18 +155,11 @@ Main inventory collection with embedded stock and expiry info.
 ```json
 {
   "_id": { "$oid": "..." },
-  "shopId": { "$oid": "shop_id" },
   "name": "Paracetamol 500mg",
   "genericName": "Acetaminophen",
   "category": "Painkiller",
-  "medicineType": "Tablet",
-  "quantityUnit": "no_of_tablets",
-  "medicineSystem": "Allopathy",
-  "codeNumber": "MED-001",
-  "imageUrl": "https://example.com/images/paracetamol.jpg",
-  "manufactureDate": { "$date": "2026-01-15" },
   "manufacturer": "ABC Pharma",
-  "vendorId": { "$oid": "vendor_id" },
+  "supplierId": { "$oid": "supplier_id" },
   "batchNumber": "BATCH-001",
   "expiryDate": { "$date": "2026-12-31" },
   "quantityInStock": 150,
@@ -257,7 +173,7 @@ Main inventory collection with embedded stock and expiry info.
 }
 ```
 
-### 3. Vendors Collection
+### 3. Suppliers Collection
 Supplier and vendor management.
 
 ```json
@@ -328,7 +244,7 @@ Tracks expired medicines and replacement requests.
 {
   "_id": { "$oid": "..." },
   "medicineId": { "$oid": "medicine_id" },
-  "vendorId": { "$oid": "vendor_id" },
+  "supplierId": { "$oid": "supplier_id" },
   "medicineName": "Paracetamol 500mg",
   "quantityExpired": 50,
   "expiryDate": { "$date": "2026-08-15" },
@@ -340,7 +256,7 @@ Tracks expired medicines and replacement requests.
 ```
 
 ### 7. Alternatives Collection (Aura DB)
-Stores alternative medicine suggestions for out-of-stock items. A single medicine can have multiple alternative medicines.
+Stores alternative medicine suggestions for out-of-stock items.
 
 ```json
 {
@@ -354,57 +270,6 @@ Stores alternative medicine suggestions for out-of-stock items. A single medicin
 }
 ```
 
-### 8. Notifications Collection
-Stores notifications sent to customers when their desired medicine is not found in inventory and no alternatives are available.
-
-```json
-{
-  "_id": { "$oid": "..." },
-  "userId": { "$oid": "customer_user_id" },
-  "type": "out_of_stock",
-  "title": "Medicine Not Available",
-  "message": "The medicine you searched for (Paracetamol 500mg) is currently not available in our inventory.",
-  "medicineId": { "$oid": "medicine_id" },
-  "isRead": false,
-  "createdAt": { "$date": "2026-08-29T00:00:00Z" }
-}
-```
-
-### 9. Supplies Collection
-Stores supply entry records when new stock arrives from suppliers.
-
-```json
-{
-  "_id": { "$oid": "..." },
-  "medicineId": { "$oid": "medicine_id" },
-  "codeNumber": "MED-001",
-  "quantitySupplied": 200,
-  "batchNumber": "BATCH-2026-001",
-  "expiryDate": { "$date": "2027-06-30" },
-  "supplierId": { "$oid": "vendor_id" },
-  "supplyDate": { "$date": "2026-08-29T00:00:00Z" },
-  "pdfGenerated": true,
-  "pdfUrl": "https://example.com/pdfs/supply-MED-001-2026-08-29.pdf",
-  "createdAt": { "$date": "2026-08-29T00:00:00Z" }
-}
-```
-
-### 10. Cart Items Collection
-Stores shopping cart items for customers before checkout.
-
-```json
-{
-  "_id": { "$oid": "..." },
-  "userId": { "$oid": "customer_user_id" },
-  "medicineId": { "$oid": "medicine_id" },
-  "medicineName": "Paracetamol 500mg",
-  "quantity": 2,
-  "unitPrice": 2.50,
-  "createdAt": { "$date": "2026-08-29T00:00:00Z" },
-  "updatedAt": { "$date": "2026-08-29T00:00:00Z" }
-}
-```
-
 ## Relationship Summary
 
 | Relationship | Type | MongoDB Pattern |
@@ -415,14 +280,7 @@ Stores shopping cart items for customers before checkout.
 | Medicine → ExpiryLogs | One-to-Many | Reference (ExpiryLog stores medicineId) |
 | Vendor → Medicines | One-to-Many | Reference |
 | Vendor → Payments | One-to-Many | Reference (Payment stores vendorId) |
-| Medicine → Alternatives | One-to-Many | Reference (Alternative stores originalMedicineId) |
-| User → Notifications | One-to-Many | Reference (Notification stores userId) |
-| Medicine → Supplies | One-to-Many | Reference (Supply stores medicineId) |
-| Vendor → Supplies | One-to-Many | Reference (Supply stores supplierId) |
-| Shop → Medicines | One-to-Many | Reference (Medicine stores shopId) |
-| Shop → Users | One-to-Many | Reference (User stores shopId) |
-| User → Cart Items | One-to-Many | Reference (CartItem stores userId) |
-| Medicine → Cart Items | One-to-Many | Reference (CartItem stores medicineId) |
+| Medicine → Alternatives | One-to-One | Reference (Alternative stores originalMedicineId) |
 
 ## Index Recommendations
 
@@ -430,49 +288,23 @@ Stores shopping cart items for customers before checkout.
 // Users
 db.users.createIndex({ "email": 1 }, { unique: true })
 db.users.createIndex({ "role": 1 })
-db.users.createIndex({ "shopId": 1 })
-
-// Shops
-db.shops.createIndex({ "shopName": 1 })
-db.shops.createIndex({ "gstNumber": 1 })
 
 // Medicines
-db.medicines.createIndex({ "vendorId": 1 })
-db.medicines.createIndex({ "shopId": 1 })
+db.medicines.createIndex({ "supplierId": 1 })
 db.medicines.createIndex({ "expiryDate": 1 })
 db.medicines.createIndex({ "name": "text", "genericName": "text" })
 db.medicines.createIndex({ "quantityInStock": 1 })
-db.medicines.createIndex({ "medicineType": 1 })
-db.medicines.createIndex({ "quantityUnit": 1 })
-db.medicines.createIndex({ "medicineSystem": 1 })
-db.medicines.createIndex({ "codeNumber": 1 }, { unique: true })
-db.medicines.createIndex({ "manufactureDate": 1 })
 
 // Orders
 db.orders.createIndex({ "customerId": 1 })
 db.orders.createIndex({ "orderDate": -1 })
 
 // Payments
-db.payments.createIndex({ "vendorId": 1 })
+db.payments.createIndex({ "supplierId": 1 })
 db.payments.createIndex({ "paymentDate": -1 })
 
 // ExpiryLogs
 db.expirylogs.createIndex({ "expiryDate": 1 })
-db.expirylogs.createIndex({ "vendorId": 1 })
+db.expirylogs.createIndex({ "supplierId": 1 })
 db.expirylogs.createIndex({ "status": 1 })
-
-// Notifications
-db.notifications.createIndex({ "userId": 1 })
-db.notifications.createIndex({ "isRead": 1 })
-db.notifications.createIndex({ "createdAt": -1 })
-
-// Supplies
-db.supplies.createIndex({ "medicineId": 1 })
-db.supplies.createIndex({ "supplierId": 1 })
-db.supplies.createIndex({ "supplyDate": -1 })
-db.supplies.createIndex({ "batchNumber": 1 })
-
-// Cart Items
-db.cartitems.createIndex({ "userId": 1 })
-db.cartitems.createIndex({ "medicineId": 1 })
 ```

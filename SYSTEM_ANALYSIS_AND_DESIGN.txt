@@ -1,0 +1,655 @@
+SYSTEM ANALYSIS AND DESIGN DOCUMENT
+Pharmacy Stock & Expiry Tracker Real-Time Application
+
+Version: 1.0
+Date: 2026-11-13
+Status: Final
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. INTRODUCTION
+   1.1 Purpose
+   1.2 Scope
+   1.3 Definitions and Acronyms
+   1.4 References
+
+2. SYSTEM OVERVIEW
+   2.1 Product Perspective
+   2.2 User Roles and Characteristics
+   2.3 Operating Environment
+   2.4 System Constraints
+
+3. REQUIREMENTS ANALYSIS
+   3.1 Functional Requirements
+   3.2 Non-Functional Requirements
+   3.3 Use Case Analysis
+
+4. SYSTEM ARCHITECTURE
+   4.1 Architectural Style
+   4.2 Technology Stack
+   4.3 System Components
+   4.4 Data Flow Architecture
+
+5. DATABASE DESIGN
+   5.1 Conceptual Data Model (ERD)
+   5.2 Logical Data Model
+   5.3 Physical Data Model
+   5.4 Indexing Strategy
+   5.5 Data Integrity Constraints
+
+6. DETAILED DESIGN
+   6.1 Process Design (DFD Level 0, 1, 2)
+   6.2 Sequence Diagrams
+   6.3 API Design
+   6.4 User Interface Design
+
+7. SECURITY DESIGN
+   7.1 Authentication and Authorization
+   7.2 Data Protection
+   7.3 API Security
+
+8. DEPLOYMENT DESIGN
+   8.1 Deployment Architecture
+   8.2 Infrastructure Requirements
+   8.3 CI/CD Considerations
+
+9. TESTING STRATEGY
+   9.1 Test Levels
+   9.2 Test Types
+   9.3 Test Data Requirements
+
+10. MAINTENANCE AND EVOLUTION
+    10.1 Maintainability Considerations
+    10.2 Future Enhancements
+    10.3 Migration Strategy
+
+================================================================================
+1. INTRODUCTION
+================================================================================
+
+1.1 Purpose
+
+This document provides a comprehensive system analysis and design for the Pharmacy Stock & Expiry Tracker Real-Time Application. It serves as the technical blueprint for development, detailing the system architecture, database design, process flows, interface specifications, and implementation guidelines. The document translates the requirements captured in the Software Requirements Specification (SRS) into a structured technical design that guides the development team.
+
+1.2 Scope
+
+The Pharmacy Stock & Expiry Tracker is a web-based real-time application designed for pharmacy inventory and financial management. The system supports three distinct user roles: Customers, Shop Owners, and Super Admin (Supplier). It provides comprehensive functionality including real-time inventory management, expiry tracking with vendor-wise replacement requests, alternative medicine suggestions powered by Aura DB, financial reporting with revenue and profit analytics, supply management with PDF generation, and role-based access control. The system integrates with MongoDB Atlas as the primary data store and Aura DB for alternative medicine suggestion logic.
+
+1.3 Definitions and Acronyms
+
+| Term | Description |
+|------|-------------|
+| JIT | Just-In-Time inventory philosophy |
+| API | Application Programming Interface |
+| SRS | Software Requirements Specification |
+| SPA | Single Page Application |
+| ERD | Entity Relationship Diagram |
+| DFD | Data Flow Diagram |
+| JWT | JSON Web Token |
+| PDF | Portable Document Format |
+| CRUD | Create, Read, Update, Delete |
+| RBAC | Role-Based Access Control |
+| REST | Representational State Transfer |
+| GraphQL | Query Language for APIs |
+| MongoDB Atlas | Cloud-hosted MongoDB service |
+| Aura DB | Graph database for alternative medicine suggestions |
+
+Medicine Type: Form of medicine - Tablet, Capsule, Syrup, Suspension, Sachet, Cream
+Quantity Unit: Measurement unit based on medicine type - grams, ml, number of tablets/capsules
+Medicine System: Medical system classification - Allopathy, Homeopathy, Ayurvedic
+Code Number: Unique mandatory identifier for medicines assigned by the user adding medicine details
+Medicine Image URL: URL string pointing to medicine image for display
+Manufacture Date: Date when medicine was manufactured
+Supply Entry: Record of new stock arrival with code number, quantity, batch number, expiry date, supplier ID
+Supply PDF: Shareable PDF document generated for suppliers detailing supplied items
+
+1.4 References
+
+- Software Requirements Specification (SRS.md)
+- Entity Relationship Diagram (ERD_NoSQL.md)
+- Data Flow Diagrams (DFD.md)
+- Use Case Diagram (UseCaseDiagram.md)
+- Sequence Diagrams (Sequence_Diagram.md)
+- CRUD Operations by Role (CRUD_Operations.md)
+
+================================================================================
+2. SYSTEM OVERVIEW
+================================================================================
+
+2.1 Product Perspective
+
+The Pharmacy Stock & Expiry Tracker is a standalone web-based real-time application built on a three-tier architecture: presentation layer (React.js frontends), application layer (Node.js/Express.js backend), and data layer (MongoDB Atlas + Aura DB). The system follows a microservices-inspired modular design where each functional domain (inventory, orders, users, vendors, reports, etc.) is implemented as a separate controller and route module, communicating through well-defined RESTful and GraphQL APIs. The frontend consists of two separate Single Page Applications: an Admin Frontend for Super Admin operations and an Owner Frontend for Shop Owner and Customer operations.
+
+2.2 User Roles and Characteristics
+
+The system defines three primary user roles with distinct capabilities:
+
+Customer: Self-registers on the platform, searches inventory by medicine type (Tablets, Capsules, Syrups, Suspensions, Sachets, Creams) and medical system (Allopathy, Homeopathy, Ayurvedic), receives alternative medicine suggestions when requested items are out of stock, gets notified when medicines are unavailable, manages own profile, orders, shopping cart, and notifications. Customers have read-only access to medicine catalog and can only access their own data.
+
+Shop Owner: Registered by Super Admin, manages inventory (full CRUD on medicines within their shop), monitors expiry dates, generates expired medicines lists and vendor-wise replacement requests, generates financial reports (revenue, profit, vendor-wise payments, customer-wise payments) for Day/Week/Month/Year periods, registers and manages suppliers/vendors, processes customer orders, enters supply details with PDF generation, manages shop profile. Shop Owners operate within their assigned shop context (shopId) and cannot access other shops' data.
+
+Super Admin (Supplier): Registers shop owners and shop details, manages system-wide users (CRUD on all user accounts with role assignment), manages system-wide vendors, configures system settings, views system-wide analytics and platform health metrics. Super Admin has full system access across all shops but typically does not manage day-to-day inventory operations.
+
+2.3 Operating Environment
+
+Frontend: Modern web browsers with JavaScript ES6+ support. React.js 18.2 with Vite 4.3 build tool. Responsive design using Bootstrap 5.2.3 with Framer Motion animations.
+
+Backend: Node.js runtime with Express.js 4.18 framework. RESTful and GraphQL API support. JWT-based authentication with bcryptjs password hashing.
+
+Database: MongoDB Atlas (primary) for inventory, users, transactions, reports, expiry logs, alternatives, notifications, and supplies. Aura DB (graph database) for alternative medicine suggestion engine and related data.
+
+External Services: PDF generation via pdfkit library. Email service integration for notifications (planned).
+
+2.4 System Constraints
+
+- Code Number on medicines must be unique and not null (enforced at API level)
+- Manufacture Date must be earlier than or equal to Expiry Date
+- Supply entries require valid medicineId and supplierId references
+- Vendor-wise replacement requests restricted to Shop Owner's own shop medicines
+- Customer self-registration is open; Shop Owner and Super Admin accounts require admin creation
+- Shop Owners can only manage data within their own shop (shopId isolation)
+- Real-time updates required for stock levels, expiry status, and notifications
+- Page load times must not exceed 3 seconds under normal network conditions
+- Database queries for reports must complete within 5 seconds
+- System must maintain 99.5% uptime during business hours
+- All API communications must use HTTPS
+- Future migration to Java-based backend must be supported without major re-architecture
+
+================================================================================
+3. REQUIREMENTS ANALYSIS
+================================================================================
+
+3.1 Functional Requirements
+
+3.1.1 Inventory Management
+The system shall allow shop owners to maintain minimal inventory per item supporting Just-In-Time (JIT) philosophy. Real-time stock level tracking for all medicines with automatic quantity updates upon sales and purchases. Medicines classified by type (Tablets, Capsules, Syrups, Suspensions, Sachets, Creams) with appropriate quantity units (grams for tablets/sachets/creams, ml for syrups/suspensions, count for tablets/capsules). Classification by medical system (Allopathy, Homeopathy, Ayurvedic) with filtering and searching capabilities.
+
+3.1.2 Expiry Tracking
+Continuous monitoring of expiry dates for all inventory items. Generation of expired medicines list upon shop owner command. Vendor-wise list of expired items to facilitate replacement requests from vendors. Replacement request tracking with status management.
+
+3.1.3 Alternative Medicine Suggestions
+When a customer requests an out-of-stock medicine, the system queries Aura DB for available alternatives with similarity scoring. If no alternatives available, appropriate message displayed to customer. Alternative suggestions include availability status.
+
+3.1.4 Notifications
+Automatic notification generation when customer searches for medicine not found in inventory and no alternatives available. Customers receive notifications through application interface with read/unread status management.
+
+3.1.5 Financial Reporting
+Revenue and profit reports for configurable periods (Day, Week, Month, Year). Vendor-wise payment reports for selected period. Customer-wise payment reports for selected period. PDF export capability for all reports.
+
+3.1.6 User Management
+Role-based access control for three user roles. Secure token-based authentication. Customer self-registration with email validation. Shop owner registration exclusively by Super Admin. Supplier registration by Shop Owner after creation by Super Admin.
+
+3.1.7 Supply Management
+Supply entry recording with code number, quantity, batch number, expiry date, supplier ID. Automatic inventory quantity update upon supply entry. Shareable PDF generation for suppliers with item details, batch numbers, expiry dates, supplier information.
+
+3.2 Non-Functional Requirements
+
+3.2.1 Performance
+Real-time updates for stock levels and expiry status. Page load times under 3 seconds. Report queries under 5 seconds. Efficient database indexing strategy.
+
+3.2.2 Security
+HTTPS for all API communications. JWT-based authentication with secure token mechanisms. Role-based access control restricting data access by role. Password hashing with bcryptjs. Input validation with express-validator.
+
+3.2.3 Reliability
+99.5% uptime during business hours. Automated scheduled data backups. Error handling with structured response format.
+
+3.2.4 Maintainability
+Modular architecture with separate controllers, routes, models, and middleware. Clear separation of concerns. Future Java backend migration supported.
+
+3.3 Use Case Analysis
+
+The system implements 25 use cases distributed across three actors:
+
+Customer (6 use cases): Search Medicines, Purchase Medicine, View Alternative Medicines (extends Search), Receive Out-of-Stock Notification (extends View Alternatives), Customer Self-Registration, Update Profile, Cancel Order, Manage Cart.
+
+Shop Owner (12 use cases): Manage Inventory, Track Expiry Dates, Generate Expired Medicines List, Request Replacement from Vendor (extends Generate Expired List), Generate Revenue & Profit Report, View Vendor-wise Payments, View Customer-wise Payments, Manage Vendors, Enter New Supply, Generate Supplier PDF (extends Enter New Supply), Register Supplier, Update Shop Profile, Cancel/Void Orders.
+
+Super Admin (4 use cases): Manage Vendors (system-wide), Manage Users & Roles, View System Analytics, Manage Shops, Update System Settings.
+
+Key extend relationships: Alternative suggestions extend search; notifications extend alternatives; replacement requests extend expired list; supplier PDF extends supply entry.
+
+================================================================================
+4. SYSTEM ARCHITECTURE
+================================================================================
+
+4.1 Architectural Style
+
+The system follows a layered three-tier architecture with modular domain-driven design:
+
+Presentation Layer: Two React.js SPAs (Admin Frontend, Owner Frontend) communicating with backend via REST/GraphQL APIs. Component-based UI with state management through React hooks and context.
+
+Application Layer: Node.js/Express.js backend organized by functional domains. Each domain has dedicated routes, controllers, models, and validation middleware. Shared middleware for authentication, error handling, and response formatting. Service layer pattern for business logic separation.
+
+Data Layer: MongoDB Atlas (document database) for primary persistence with Mongoose ODM. Aura DB (graph database) for alternative medicine relationships. PDF generation service as external utility.
+
+Communication: RESTful APIs for standard CRUD operations. GraphQL endpoints for flexible real-time querying. Asynchronous processing for PDF generation and notifications.
+
+4.2 Technology Stack
+
+Backend:
+- Node.js: JavaScript runtime
+- Express.js 4.18: Web application framework
+- Mongoose 8.0: MongoDB object modeling
+- bcryptjs 2.4: Password hashing
+- jsonwebtoken 9.0: JWT authentication
+- cors 2.8: Cross-origin resource sharing
+- express-validator 7.0: Input validation
+- pdfkit 0.13: PDF document generation
+- express-async-handler 1.2: Async error handling
+- dotenv 16.3: Environment configuration
+
+Frontend (Admin & Owner):
+- React 18.2: Component library
+- React Router 6.8: Client-side routing
+- Vite 4.3: Build tool and dev server
+- Bootstrap 5.2: UI framework
+- Framer Motion 10.12: Animations
+- React Icons 4.8: Iconography
+- Axios 1.3: HTTP client
+- Recharts 2.10/3.10: Data visualization
+- jQuery 3.7: DOM utilities
+- @popperjs/core 2.11: Positioning engine
+
+Databases:
+- MongoDB Atlas: Primary document database
+- Aura DB: Graph database for alternatives
+
+4.3 System Components
+
+Backend Modules (13 domain controllers):
+1. AuthController: Authentication, registration, login, JWT management
+2. UserController: User profile, role management, CRUD operations
+3. ShopController: Shop registration, details, CRUD (Super Admin)
+4. MedicineController: Medicine CRUD, inventory, search, filtering
+5. OrderController: Order processing, status management, payment recording
+6. CartController: Shopping cart operations
+7. VendorController: Vendor/supplier CRUD, management
+8. SupplyController: Supply entry, inventory update, PDF generation
+9. ExpiryController: Expiry monitoring, logs, replacement requests
+10. ReportController: Financial reports, payment analytics, PDF export
+11. NotificationController: Notification CRUD, read status
+12. SystemController: System settings, configuration, analytics
+13. AlternativeController: Alternative medicine suggestions via Aura DB
+
+Middleware:
+- auth.js: JWT verification, role-based authorization
+- errorHandler.js: Centralized error handling, structured responses
+- validation.js: Request validation schemas
+
+Utilities:
+- response.js: Standardized API response format
+- pdfGenerator.js: PDF document creation for supplies and reports
+
+Frontend Pages (Owner Frontend - 9 pages):
+- Dashboard: Overview with analytics charts
+- Medicines: Inventory management, search, CRUD
+- Orders: Order processing, status updates
+- Supplies: Supply entry, history, PDF generation
+- ExpiryLogs: Expired items, replacement requests
+- Vendors: Vendor management
+- Reports: Financial reports, analytics
+- Profile: Shop profile management
+- Login: Authentication
+
+Frontend Pages (Admin Frontend - 8 pages):
+- Login: Super Admin authentication
+- Users: System-wide user management
+- Shops: Shop registration and management
+- Vendors: System-wide vendor management
+- Supplies: Supply oversight
+- ExpiryLogs: System-wide expiry monitoring
+- Reports: System analytics
+- Notifications: Notification management
+- Profile: Admin profile
+
+4.4 Data Flow Architecture
+
+Data flows follow the pattern: Actor -> Frontend -> Backend API -> Data Store (MongoDB Atlas/Aura DB) -> Backend API -> Frontend -> Actor. External services (PDF Generator, Email Service) are invoked asynchronously from the backend. Real-time updates propagate through API callbacks. The DFD Level 0 shows the system as a single process interacting with four external entities (Customer, Shop Owner, Super Admin, MongoDB Atlas, Aura DB). Level 1 decomposes into 11 major processes. Level 2 details each process into sub-processes with specific data flows.
+
+================================================================================
+5. DATABASE DESIGN
+================================================================================
+
+5.1 Conceptual Data Model (ERD)
+
+The Entity Relationship Diagram defines 8 core entities with relationships:
+
+USERS: Central entity for all user types (Customer, Shop Owner, Super Admin). Attributes: _id, name, email, passwordHash, role, phone, address, isActive, createdAt, updatedAt.
+
+MEDICINES: Core inventory entity. Attributes: _id, name, genericName, category, manufacturer, supplierId, batchNumber, expiryDate, quantityInStock, minStockLevel, pricePerUnit, costPrice, description, isActive, createdAt, updatedAt. Relationships: supplied by VENDOR, ordered in ORDER_ITEMS, tracked in EXPIRY_LOGS, has ALTERNATIVE.
+
+VENDORS: Supplier management. Attributes: _id, name, contactPerson, email, phone, address, gstNumber, isActive, createdAt, updatedAt. Relationships: supplies MEDICINES, receives VENDOR_PAYMENTS, replacement for EXPIRY_LOGS.
+
+ORDERS: Customer purchase orders. Attributes: _id, customerId, totalAmount, paymentStatus, orderStatus, orderDate, updatedAt. Contains ORDER_ITEMS (embedded array).
+
+ORDER_ITEMS: Line items within orders. Attributes: _id, orderId, medicineId, medicineName, quantity, unitPrice, totalPrice.
+
+PAYMENTS: Financial transactions. Attributes: _id, vendorId, userId, amount, paymentMethod, paymentStatus, paymentDate, notes, createdAt.
+
+EXPIRY_LOGS: Expired medicine tracking. Attributes: _id, medicineId, supplierId, medicineName, quantityExpired, expiryDate, replacementRequested, replacementDate, status, createdAt.
+
+ALTERNATIVES (Aura DB): Alternative medicine suggestions. Attributes: _id, originalMedicineId, alternativeMedicineId, alternativeName, similarityScore, isAvailable, createdAt.
+
+5.2 Logical Data Model
+
+Collections mapped to MongoDB document structure with references and embedding:
+
+Users Collection: Single collection for all roles differentiated by 'role' field. Address embedded as sub-document.
+
+Medicines Collection: Primary inventory collection. Supplier reference via supplierId. Indexes on supplierId, expiryDate, text search on name/genericName, quantityInStock.
+
+Suppliers/Vendors Collection: Vendor management with GST number. Address embedded.
+
+Orders Collection: Customer orders with embedded ORDER_ITEMS array for atomic order operations. References to customerId.
+
+Payments Collection: Tracks all financial transactions with vendorId and userId references.
+
+ExpiryLogs Collection: Audit trail for expired medicines with supplier reference for replacement workflow.
+
+Alternatives Collection (Aura DB): Graph-based relationships between original and alternative medicines with similarity scoring.
+
+5.3 Physical Data Model
+
+MongoDB Atlas collections with indexing strategy:
+
+Users: Unique index on email, index on role.
+Medicines: Index on supplierId, expiryDate, compound text index on name+genericName, index on quantityInStock.
+Orders: Index on customerId, descending index on orderDate.
+Payments: Index on supplierId, descending index on paymentDate.
+ExpiryLogs: Index on expiryDate, supplierId, status.
+Alternatives: Index on originalMedicineId, alternativeMedicineId.
+
+5.4 Indexing Strategy
+
+Indexes designed for query patterns:
+- Email uniqueness enforcement for authentication
+- Role-based queries for user management
+- Supplier-based medicine lookups for supply chain
+- Expiry date scanning for monitoring jobs
+- Full-text search for medicine discovery
+- Stock level alerts for JIT reordering
+- Customer order history retrieval
+- Payment reconciliation by vendor and date
+- Expiry log filtering by status and supplier
+
+5.5 Data Integrity Constraints
+
+Application-level constraints enforced via Mongoose validation and API middleware:
+- Code Number uniqueness and non-null validation
+- Manufacture Date <= Expiry Date validation
+- Required field validation on all entities
+- Reference integrity for foreign keys (supplierId, customerId, medicineId)
+- Role-based data isolation (shopId scoping for Shop Owners)
+- Soft delete pattern (isActive flag) for audit trail
+
+================================================================================
+6. DETAILED DESIGN
+================================================================================
+
+6.1 Process Design (DFD)
+
+6.1.1 DFD Level 0 - Context Diagram
+Single process "Pharmacy System" interacting with 5 external entities: Customer, Shop Owner, Super Admin, MongoDB Atlas, Aura DB. Data flows include search/purchase/notifications (Customer), inventory/expiry/reports/supplies (Shop Owner), vendor/user/analytics management (Super Admin), data storage/retrieval (MongoDB), alternative queries (Aura DB).
+
+6.1.2 DFD Level 1 - System Decomposition
+11 major processes:
+1.0 Manage Inventory - Medicine CRUD, stock levels, JIT monitoring
+2.0 Process Orders - Order creation, stock deduction, payment recording
+3.0 Handle Search & Alternatives - Medicine search, Aura DB alternative queries
+4.0 Track Expiry & Replacements - Expiry monitoring, expired lists, replacement requests
+5.0 Manage Users & Vendors - User CRUD, vendor CRUD (both roles)
+6.0 Generate Reports - Financial, payment, analytics reports
+7.0 Handle Notifications - Notification creation, viewing
+8.0 Supply Management & PDF Generation - Supply entry, stock update, PDF creation
+9.0 Customer Self-Registration - Account creation
+10.0 Register Shop Owner - Shop + owner creation (Super Admin)
+11.0 Register Supplier - Supplier creation (Shop Owner)
+
+Data stores: MongoDB Atlas (all processes), Aura DB (process 3.0), PDF Generator (process 8.0).
+
+6.1.3 DFD Level 2 - Detailed Process Flows
+
+Each Level 1 process decomposed into 3-4 sub-processes with explicit data flows:
+
+1.0 Manage Inventory: 1.1 Add/Update Medicine, 1.2 View Inventory, 1.3 Update Stock Level
+2.0 Process Orders: 2.1 Create Order, 2.2 Update Stock, 2.3 Record Payment
+3.0 Handle Search & Alternatives: 3.1 Search Medicines, 3.2 Suggest Alternatives
+4.0 Track Expiry & Replacements: 4.1 Monitor Expiry Dates, 4.2 Generate Expired List, 4.3 Request Replacement
+5.0 Manage Users & Vendors: 5.1 Manage Users, 5.2 Manage Vendors
+6.0 Generate Reports: 6.1 Financial Reports, 6.2 Payment Reports, 6.3 Analytics Dashboard
+7.0 Handle Notifications: 7.1 Create Notification, 7.2 View Notifications
+8.0 Supply Management: 8.1 Enter Supply Details, 8.2 Update Inventory, 8.3 Generate Supplier PDF
+
+Cross-process flows: Out-of-stock triggers notifications (3.0 -> 7.0), order completion updates stock (2.0 -> 1.0), order payment triggers report update (2.0 -> 6.0), supply entry updates inventory (8.0 -> 1.0), registration enables login (9.0 -> Customer).
+
+6.2 Sequence Diagrams
+
+15 detailed sequence diagrams covering all major workflows:
+
+1. Search Medicine with Alternatives and Notifications: Customer search -> API -> MongoDB -> results; if out of stock -> Aura DB alternatives -> display; if no alternatives -> notification service -> DB -> customer notification.
+
+2. Purchase Medicine: Cart -> order API -> stock check -> order creation -> stock deduction -> payment record -> confirmation -> optional PDF invoice.
+
+3. Enter New Supply & Generate Supplier PDF: Supply details -> medicine validation -> supply record -> stock update -> PDF generation with supplier details -> shareable PDF.
+
+4. Track Expiry & Request Replacement: Expired list query -> vendor-wise display -> replacement request -> expiry log update -> optional vendor notification.
+
+5. Generate Financial Report: Period selection -> order/payment queries -> revenue/profit calculation -> dashboard display -> optional PDF export.
+
+6. Manage Inventory (Add/Update Medicine): Form validation -> code number uniqueness -> manufacture/expiry date validation -> medicine creation -> inventory refresh.
+
+7. Manage Users & Vendors (Super Admin): User/vendor listing -> CRUD operations -> validation -> database updates.
+
+8. Customer Self-Registration: Registration form -> validation -> email uniqueness -> customer creation -> JWT token -> login redirect.
+
+9. Register Shop Owner by Super Admin: Shop creation/selection -> shop owner creation with role/shopId -> credentials delivery.
+
+10. Register Supplier by Shop Owner: Shop context -> supplier details -> vendor creation linked to shop.
+
+11. Customer Update Profile: Profile retrieval -> field updates -> validation -> persistence.
+
+12. Customer Cancel Order: Order history -> cancellation validation -> status update -> stock restoration.
+
+13. Customer Manage Cart: Browse -> add/update/remove cart items -> stock validation -> cart persistence.
+
+14. Shop Owner Delete Medicine: Inventory view -> ownership validation -> active order check -> soft/hard delete.
+
+15. Super Admin Manage Users/Shops/Vendors: Multi-entity management with full CRUD and validation.
+
+6.3 API Design
+
+RESTful endpoints organized by resource:
+
+Authentication: POST /api/auth/register, POST /api/auth/login
+Users: GET/POST /api/users, GET/PUT/DELETE /api/users/{id}, GET/PUT /api/users/profile
+Shops: GET/POST /api/shops, GET/PUT/DELETE /api/shops/{id}
+Medicines: GET/POST /api/medicines, GET/PUT/DELETE /api/medicines/{id}, GET /api/medicines/code-number/suggestions
+Orders: GET/POST /api/orders, GET/PUT/DELETE /api/orders/{id}, POST /api/orders/{id}/cancel, GET /api/orders/{id}/pdf
+Cart: GET/POST /api/cart, PUT/DELETE /api/cart/{cartItemId}
+Vendors: GET/POST /api/vendors, GET/PUT/DELETE /api/vendors/{id}
+Supplies: GET/POST /api/supplies, GET /api/supplies/{id}/pdf
+Expiry Logs: GET /api/expiry-logs, POST /api/expiry-logs/replacement
+Reports: GET /api/reports/financial, GET /api/reports/financial/pdf
+Notifications: GET/POST /api/notifications, PUT /api/notifications/{id}
+System: GET/PUT /api/system/settings
+Alternatives: GET /api/alternatives
+
+GraphQL endpoints for flexible querying (planned/partial).
+
+Standardized response format: { success: boolean, data: object|array, message: string, errors: array }
+
+6.4 User Interface Design
+
+Two distinct SPAs with role-appropriate interfaces:
+
+Owner Frontend (Shop Owner + Customer):
+- Responsive dashboard with Recharts visualizations
+- Sidebar navigation with Framer Motion transitions
+- Medicine cards with images, type/system badges, stock indicators
+- Protected routes with role-based access
+- Bootstrap 5 components for forms, tables, modals
+- Real-time updates via polling/WebSocket (planned)
+
+Admin Frontend (Super Admin):
+- Management tables with sorting, filtering, pagination
+- User/shop/vendor management interfaces
+- System analytics dashboard
+- Configuration panels
+
+Shared components: Header, Sidebar, ProtectedRoute, MedicineCard, MedicineCardsContainer.
+
+================================================================================
+7. SECURITY DESIGN
+================================================================================
+
+7.1 Authentication and Authorization
+
+JWT-based stateless authentication:
+- Access tokens issued on login/registration with 24-hour expiry
+- Tokens stored in localStorage (frontend) and sent via Authorization header
+- Password hashing with bcryptjs (12 rounds)
+- Role claim embedded in token payload (customer, shop_owner, super_admin)
+- Shop Owner tokens include shopId for data scoping
+
+Role-Based Access Control (RBAC):
+- Middleware validates token and extracts role/shopId
+- Route-level authorization: Super Admin routes require super_admin role
+- Shop Owner routes require shop_owner role with matching shopId
+- Customer routes require customer role with ownership validation
+- API controllers enforce data isolation at query level
+
+7.2 Data Protection
+
+- HTTPS enforcement in production (corsOptions origin restriction)
+- Environment variables for secrets (MongoDB URI, JWT secret)
+- Input validation and sanitization via express-validator
+- MongoDB injection prevention through Mongoose ODM
+- Passwords never logged or returned in API responses
+- Soft delete preserves audit trail
+
+7.3 API Security
+
+- Rate limiting (planned via express-rate-limit)
+- CORS configuration: wildcard in development, restricted in production
+- Helmet.js headers (planned)
+- Request size limits
+- Error handling without stack trace exposure in production
+- Structured error responses without internal details
+
+================================================================================
+8. DEPLOYMENT DESIGN
+================================================================================
+
+8.1 Deployment Architecture
+
+Development: Concurrent frontend (Vite dev servers on ports 5173/5174) and backend (nodemon on port 5000) with hot reload.
+
+Production:
+- Backend: Node.js process managed by PM2 or similar process manager
+- Frontend: Static builds served by Nginx or cloud storage (Vercel, Netlify)
+- Database: MongoDB Atlas managed cluster
+- Alternative DB: Aura DB managed instance
+- Reverse proxy: Nginx for SSL termination and routing
+- Load balancing: Horizontal scaling of backend instances
+
+8.2 Infrastructure Requirements
+
+Backend Server: 2+ CPU cores, 4GB+ RAM, Node.js 18+ LTS
+Frontend Hosting: Static file hosting with CDN
+Database: MongoDB Atlas M10+ cluster (2GB+ storage)
+Aura DB: Appropriate tier for graph queries
+SSL Certificates: Valid TLS certificates
+Monitoring: Application performance monitoring (APM)
+Logging: Centralized log aggregation
+Backups: Automated daily MongoDB Atlas backups
+
+8.3 CI/CD Considerations
+
+- Git-based workflow with feature branches
+- Automated testing on pull requests
+- Staging environment for integration testing
+- Blue-green or rolling deployment for zero-downtime releases
+- Database migration scripts for schema changes
+- Environment-specific configuration management
+- Health check endpoints for load balancer integration
+
+================================================================================
+9. TESTING STRATEGY
+================================================================================
+
+9.1 Test Levels
+
+Unit Testing: Individual controller methods, model validation, utility functions, middleware logic. Target: 80%+ code coverage.
+
+Integration Testing: API endpoint testing with test database, authentication flows, cross-module interactions, PDF generation.
+
+End-to-End Testing: Critical user journeys (registration -> login -> search -> purchase), admin workflows (user/shop management), report generation.
+
+Performance Testing: Load testing for concurrent users, report query benchmarks, stock update latency.
+
+Security Testing: Authentication bypass attempts, authorization boundary testing, input validation edge cases, JWT token manipulation.
+
+9.2 Test Types
+
+Functional Testing: Requirements traceability to test cases. CRUD operations for all entities. Business rule validation (JIT, expiry, alternatives).
+
+Regression Testing: Automated suite for core flows. Run on every deployment.
+
+Usability Testing: Responsive design validation, accessibility (WCAG 2.1 AA), cross-browser compatibility.
+
+Data Integrity Testing: Referential integrity, constraint validation, concurrent update handling.
+
+9.3 Test Data Requirements
+
+- Seed scripts for development/test databases
+- Representative medicine catalog (50+ items across types/systems)
+- Multi-role user accounts
+- Historical order/payment data for reports
+- Expiry scenarios (current, near, past)
+- Vendor/supplier records with GST
+- Alternative medicine mappings in Aura DB
+
+================================================================================
+10. MAINTENANCE AND EVOLUTION
+================================================================================
+
+10.1 Maintainability Considerations
+
+Modular architecture enables independent development and testing of domains. Consistent coding patterns across controllers (async/await with express-async-handler). Centralized error handling reduces duplication. Standardized response format simplifies frontend integration. Mongoose models encapsulate validation logic. Environment-based configuration supports multiple deployments.
+
+10.2 Future Enhancements
+
+Backend Migration to Java: Spring Boot implementation with identical API contracts. Shared database schema enables gradual migration.
+
+Mobile Application: React Native or Flutter apps consuming same APIs. Offline-first capability for inventory management.
+
+Billing System Integration: POS integration, invoice standardization, tax compliance (GST), payment gateway integration.
+
+Advanced Analytics: Predictive stock forecasting, demand planning, supplier performance dashboards, customer behavior analytics.
+
+Notification Enhancements: Email/SMS/push notifications for expiry alerts, order confirmations, low stock warnings.
+
+Multi-language Support: i18n for regional deployments.
+
+Audit Logging: Comprehensive audit trail for regulatory compliance.
+
+10.3 Migration Strategy
+
+Java Backend Migration:
+1. Implement Spring Boot services mirroring Express.js API contracts
+2. Run both backends in parallel with feature flags
+3. Migrate frontend API clients incrementally
+4. Validate data consistency
+5. Decommission Node.js backend
+
+Database Evolution:
+- MongoDB schema versioning via migration scripts
+- Backward-compatible field additions
+- Index optimization based on query analysis
+- Potential sharding for multi-tenant scale
+
+================================================================================
+END OF DOCUMENT
+================================================================================

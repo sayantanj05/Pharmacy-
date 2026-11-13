@@ -32,8 +32,17 @@ const App = () => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     if (token && userData) {
-      setUser(JSON.parse(userData));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      try {
+        const parsed = JSON.parse(userData);
+        if (parsed && typeof parsed === 'object') {
+          setUser(parsed);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        } else {
+          localStorage.removeItem('user');
+        }
+      } catch (e) {
+        localStorage.removeItem('user');
+      }
     }
     setLoading(false);
   }, []);
