@@ -5,6 +5,8 @@ import MedicineCard from '../components/MedicineCard';
 
 const Medicines = () => {
   const [medicines, setMedicines] = useState([]);
+  const [shops, setShops] = useState([]);
+  const [shopId, setShopId] = useState('');
   const [search, setSearch] = useState('');
   const [medicineType, setMedicineType] = useState('');
   const [medicineSystem, setMedicineSystem] = useState('');
@@ -17,12 +19,20 @@ const Medicines = () => {
   const [altLoading, setAltLoading] = useState(false);
 
   useEffect(() => {
+    api
+      .get('/medicines/shops')
+      .then((res) => setShops(res.data.data.shops || []))
+      .catch(() => setShops([]));
+  }, []);
+
+  useEffect(() => {
     let active = true;
     const load = async () => {
       setLoading(true);
       try {
         const res = await api.get('/medicines', {
           params: {
+            shopId: shopId || undefined,
             search: search || undefined,
             medicineType: medicineType || undefined,
             medicineSystem: medicineSystem || undefined,
@@ -42,7 +52,7 @@ const Medicines = () => {
       active = false;
       clearTimeout(timer);
     };
-  }, [search, medicineType, medicineSystem, inStockOnly]);
+  }, [shopId, search, medicineType, medicineSystem, inStockOnly]);
 
   const addToCart = async (medicine) => {
     setFeedback('');
@@ -92,6 +102,15 @@ const Medicines = () => {
             </div>
           </div>
           <div className="col-md-3">
+            <label className="form-label">Shop</label>
+            <select className="form-select" value={shopId} onChange={(e) => setShopId(e.target.value)}>
+              <option value="">All shops</option>
+              {shops.map((shop) => (
+                <option key={shop._id} value={shop._id}>{shop.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-md-3">
             <label className="form-label">Type</label>
             <select className="form-select" value={medicineType} onChange={(e) => setMedicineType(e.target.value)}>
               <option value="">All types</option>
@@ -112,7 +131,7 @@ const Medicines = () => {
               <option>Ayurvedic</option>
             </select>
           </div>
-          <div className="col-md-2">
+          <div className="col-md-3">
             <div className="form-check mt-2">
               <input
                 className="form-check-input"

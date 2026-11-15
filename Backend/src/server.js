@@ -30,6 +30,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const systemRoutes = require('./routes/systemRoutes');
 const alternativeRoutes = require('./routes/alternativeRoutes');
+const procurementRoutes = require('./routes/procurementRoutes');
 
 const app = express();
 connectDB();
@@ -58,6 +59,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/system', systemRoutes);
 app.use('/api/alternatives', alternativeRoutes);
+app.use('/api/procurement', procurementRoutes);
 
 app.use('*', (req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });

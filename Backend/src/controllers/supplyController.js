@@ -2,18 +2,29 @@ const Supply = require('../models/Supply');
 const Medicine = require('../models/Medicine');
 const { generateSupplyPDF } = require('../utils/pdfGenerator');
 const { sendResponse } = require('../utils/response');
+const { resolveShopFilter } = require('../utils/shopScope');
+
+const ownerShopId = (req) => {
+  if (req.user.role !== 'shop_owner') return null;
+  return req.shopId || null;
+};
 
 exports.getSupplies = async (req, res, next) => {
   try {
-    let filter = {};
+    const filter = {};
+
     if (req.user.role === 'shop_owner') {
-      filter.shopId = req.user.shopId;
+      if (!req.shopId) {
+        sendResponse(res, 200, true, 'Supplies fetched', { supplies: [] });
+        return;
+      }
+      filter.shopId = req.shopId;
+    } else if (req.user.role === 'super_admin') {
+      const requested = req.query.shopId || req.shopFilter;
+      if (requested) filter.shopId = await resolveShopFilter(requested);
     }
-    const { shopId } = req.query;
-    if (shopId && req.user.role === 'super_admin') {
-      filter.shopId = shopId;
-    }
-    const supplies = await Supply.find(filter).populate('vendorId');
+
+    const supplies = await Supply.find(filter).populate('vendorId').sort({ createdAt: -1 });
     sendResponse(res, 200, true, 'Supplies fetched', { supplies });
   } catch (error) {
     next(error);
@@ -22,7 +33,11 @@ exports.getSupplies = async (req, res, next) => {
 
 exports.getSupply = async (req, res, next) => {
   try {
-    const supply = await Supply.findById(req.params.id).populate('vendorId');
+    const filter = { _id: req.params.id };
+    const shopId = ownerShopId(req);
+    if (shopId) filter.shopId = shopId;
+
+    const supply = await Supply.findOne(filter).populate('vendorId');
     if (!supply) {
       res.status(404);
       throw new Error('Supply not found');
@@ -36,9 +51,17 @@ exports.getSupply = async (req, res, next) => {
 exports.createSupply = async (req, res, next) => {
   try {
     const supplyData = { ...req.body };
+
     if (req.user.role === 'shop_owner') {
-      supplyData.shopId = req.user.shopId;
+      if (!req.shopId) {
+        res.status(400);
+        throw new Error('Your account is not linked to a valid shop');
+      }
+      supplyData.shopId = req.shopId;
+    } else if (req.shopFilter) {
+      supplyData.shopId = req.shopFilter;
     }
+
     const supply = await Supply.create(supplyData);
 
     if (supply.items && supply.items.length > 0) {
@@ -57,11 +80,14 @@ exports.createSupply = async (req, res, next) => {
 
 exports.updateSupply = async (req, res, next) => {
   try {
-    let filter = { _id: req.params.id };
-    if (req.user.role === 'shop_owner') {
-      filter.shopId = req.user.shopId;
-    }
-    const supply = await Supply.findOneAndUpdate(filter, req.body, { new: true });
+    const filter = { _id: req.params.id };
+    const shopId = ownerShopId(req);
+    if (shopId) filter.shopId = shopId;
+
+    const updates = { ...req.body };
+    delete updates.shopId;
+
+    const supply = await Supply.findOneAndUpdate(filter, updates, { new: true });
     if (!supply) {
       res.status(404);
       throw new Error('Supply not found');
@@ -74,10 +100,10 @@ exports.updateSupply = async (req, res, next) => {
 
 exports.deleteSupply = async (req, res, next) => {
   try {
-    let filter = { _id: req.params.id };
-    if (req.user.role === 'shop_owner') {
-      filter.shopId = req.user.shopId;
-    }
+    const filter = { _id: req.params.id };
+    const shopId = ownerShopId(req);
+    if (shopId) filter.shopId = shopId;
+
     const supply = await Supply.findOneAndDelete(filter);
     if (!supply) {
       res.status(404);
@@ -91,7 +117,11 @@ exports.deleteSupply = async (req, res, next) => {
 
 exports.getSupplyPDF = async (req, res, next) => {
   try {
-    const supply = await Supply.findById(req.params.id);
+    const filter = { _id: req.params.id };
+    const shopId = ownerShopId(req);
+    if (shopId) filter.shopId = shopId;
+
+    const supply = await Supply.findOne(filter);
     if (!supply) {
       res.status(404);
       throw new Error('Supply not found');

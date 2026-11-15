@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
 
 const API_URL = 'http://192.168.31.187:5000/api';
 
 const Orders = ({ user }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const refreshToken = useRefreshOnFocus();
 
   const fetchOrders = async () => {
     try {
@@ -22,7 +24,7 @@ const Orders = ({ user }) => {
     }
   };
 
-  useEffect(() => { fetchOrders(); }, [user]);
+  useEffect(() => { fetchOrders(); }, [user, refreshToken]);
 
   const updateStatus = async (orderId, status) => {
     const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };

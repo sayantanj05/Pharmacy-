@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
 
 const API_URL = 'http://192.168.31.187:5000/api';
 
@@ -10,6 +11,7 @@ const Vendors = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingVendor, setEditingVendor] = useState(null);
+  const refreshToken = useRefreshOnFocus();
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', address: '', licenseNumber: '', gstNumber: '', isActive: true });
 
   const fetchVendors = async () => {
@@ -26,7 +28,7 @@ const Vendors = ({ user }) => {
     }
   };
 
-  useEffect(() => { fetchVendors(); }, [user]);
+  useEffect(() => { fetchVendors(); }, [user, refreshToken]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

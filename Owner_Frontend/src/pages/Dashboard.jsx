@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaPills, FaShoppingCart, FaTruck, FaBoxes, FaChartBar, FaChartPie, FaChartLine, FaCircle } from 'react-icons/fa';
+import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -9,14 +10,21 @@ import {
 } from 'recharts';
 
 const API_URL = 'http://192.168.31.187:5000/api';
+
 const COLORS = ['#10B981', '#0EA5E9', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
 const Dashboard = ({ user }) => {
-  const [stats, setStats] = useState({ totalMedicines: 0, totalOrders: 0, totalVendors: 0, totalSupplies: 0, totalRevenue: 0 });
+  const [stats, setStats] = useState({
+    totalMedicines: 0,
+    totalOrders: 0,
+    totalVendors: 0,
+    totalSupplies: 0,
+  });
   const [medicines, setMedicines] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeGranularity, setTimeGranularity] = useState('daily');
+  const refreshToken = useRefreshOnFocus();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,7 +33,7 @@ const Dashboard = ({ user }) => {
         const shopFilter = user?.shopId ? `?shopId=${user.shopId}` : '';
         const [medicinesRes, ordersRes, vendorsRes, suppliesRes] = await Promise.all([
           axios.get(`${API_URL}/medicines${shopFilter}`, { headers }),
-          axios.get(`${API_URL}/orders${shopFilter ? '?shopId=' + user.shopId : ''}`, { headers }),
+          axios.get(`${API_URL}/orders${shopFilter}`, { headers }),
           axios.get(`${API_URL}/vendors${shopFilter}`, { headers }),
           axios.get(`${API_URL}/supplies${shopFilter}`, { headers }),
         ]);
@@ -40,7 +48,6 @@ const Dashboard = ({ user }) => {
           totalOrders: ordersPayload.length,
           totalVendors: vendorsPayload.length,
           totalSupplies: suppliesPayload.length,
-          totalRevenue: ordersPayload.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -49,7 +56,7 @@ const Dashboard = ({ user }) => {
       }
     };
     fetchData();
-  }, [user]);
+  }, [user, refreshToken]);
 
   const topMedicinesByStock = useMemo(() => {
     return [...medicines]
@@ -150,7 +157,11 @@ const Dashboard = ({ user }) => {
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-35} textAnchor="end" height={80} />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="stock" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="stock" radius={[4, 4, 0, 0]}>
+                    {topMedicinesByStock.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -244,7 +255,7 @@ const Dashboard = ({ user }) => {
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="count" stroke="#0EA5E9" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

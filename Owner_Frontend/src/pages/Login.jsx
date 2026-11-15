@@ -1,39 +1,39 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { motion } from 'framer-motion';
+import { FaPills } from 'react-icons/fa';
 
 const API_URL = 'http://192.168.31.187:5000/api';
 
 const Login = ({ onLogin }) => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError('');
-    try {
-      const res = await axios.post(`${API_URL}/auth/login`, formData);
-      const { token, user } = res.data.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      onLogin(user);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+    const result = await onLogin(email, password);
+    if (!result.success) {
+      setError(result.message);
     }
+    setLoading(false);
   };
 
   return (
     <div className="login-container">
       <motion.div
         className="login-card"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
       >
-        <h2 className="text-center mb-4">Shop Owner Login</h2>
+        <div className="text-center mb-4">
+          <FaPills size={48} className="text-primary mb-2" />
+          <h2>Pharmacy Owner</h2>
+          <p className="text-muted">Shop Owner Portal</p>
+        </div>
         {error && <div className="alert alert-danger">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
@@ -41,8 +41,8 @@ const Login = ({ onLogin }) => {
             <input
               type="email"
               className="form-control"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -51,12 +51,14 @@ const Login = ({ onLogin }) => {
             <input
               type="password"
               className="form-control"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary w-100">Login</button>
+          <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
       </motion.div>
     </div>

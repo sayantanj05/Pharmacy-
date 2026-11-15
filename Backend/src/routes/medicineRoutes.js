@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const medicineController = require('../controllers/medicineController');
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, shopScope } = require('../middleware/auth');
 
-router.get('/', medicineController.getMedicines);
-router.get('/:id', medicineController.getMedicine);
-router.get('/suggestions/code-numbers', protect, authorize('shop_owner'), medicineController.getCodeNumberSuggestions);
-router.post('/', protect, authorize('shop_owner', 'super_admin'), medicineController.createMedicine);
-router.put('/:id', protect, authorize('shop_owner', 'super_admin'), medicineController.updateMedicine);
-router.delete('/:id', protect, authorize('shop_owner', 'super_admin'), medicineController.deleteMedicine);
+router.get('/', protect, shopScope, medicineController.getMedicines);
+router.get('/suggestions/code-numbers', protect, shopScope, authorize('shop_owner'), medicineController.getCodeNumberSuggestions);
+router.get('/:id', protect, shopScope, medicineController.getMedicine);
+router.post('/', protect, shopScope, authorize('shop_owner', 'super_admin'), medicineController.createMedicine);
+router.put('/:id', protect, shopScope, authorize('shop_owner', 'super_admin'), medicineController.updateMedicine);
+router.delete('/:id', protect, shopScope, authorize('shop_owner', 'super_admin'), medicineController.deleteMedicine);
 
 module.exports = router;

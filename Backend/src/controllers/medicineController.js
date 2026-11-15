@@ -1,11 +1,29 @@
 const Medicine = require('../models/Medicine');
 const { sendResponse } = require('../utils/response');
+const { resolveShopFilter } = require('../utils/shopScope');
+
+/**
+ * Builds the shop filter for a request.
+ *
+ * - shop_owner / customer: always scoped to their own shop (`req.shopId`, an ObjectId).
+ * - super_admin: honours an explicit `?shopId=` (ObjectId or shop key) when provided.
+ */
+const buildShopFilter = async (req) => {
+  if (req.user && req.user.role === 'super_admin') {
+    return req.shopFilter ? { shopId: req.shopFilter } : {};
+  }
+  if (req.shopId) return { shopId: req.shopId };
+  if (req.query && req.query.shopId) {
+    const resolved = await resolveShopFilter(req.query.shopId);
+    if (resolved) return { shopId: resolved };
+  }
+  return {};
+};
 
 exports.getMedicines = async (req, res, next) => {
   try {
-    const { shopId, search, category, medicineSystem, medicineType } = req.query;
-    const filter = { isActive: true };
-    if (shopId) filter.shopId = shopId;
+    const { search, category, medicineSystem, medicineType } = req.query;
+    const filter = { isActive: true, ...(await buildShopFilter(req)) };
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -24,7 +42,13 @@ exports.getMedicines = async (req, res, next) => {
 
 exports.getMedicine = async (req, res, next) => {
   try {
-    const medicine = await Medicine.findById(req.params.id);
+    const filter = { _id: req.params.id };
+    if (req.user && req.user.role === 'shop_owner' && req.shopId) {
+      filter.shopId = req.shopId;
+    } else if (req.user && req.user.role === 'customer' && req.shopId) {
+      filter.shopId = req.shopId;
+    }
+    const medicine = await Medicine.findOne(filter);
     if (!medicine) {
       res.status(404);
       throw new Error('Medicine not found');
@@ -37,76 +61,81 @@ exports.getMedicine = async (req, res, next) => {
 
 exports.createMedicine = async (req, res, next) => {
   try {
-    console.log('Creating medicine with body:', req.body);
-    console.log('User role:', req.user.role);
-    console.log('User shopId:', req.user.shopId);
-    
-    // For shop_owners, use their shopId. For super_admins, use shopId from body or leave it null
     const medicineData = { ...req.body };
-    if (req.user.role === 'shop_owner' && req.user.shopId) {
-      medicineData.shopId = req.user.shopId;
+
+    // Shop owners always write to their own shop; super admins may target one explicitly.
+    if (req.user.role === 'shop_owner') {
+      if (!req.shopId) {
+        res.status(400);
+        throw new Error('Your account is not linked to a valid shop');
+      }
+      medicineData.shopId = req.shopId;
+    } else if (req.shopFilter) {
+      medicineData.shopId = req.shopFilter;
     }
-    
+
     const medicine = await Medicine.create(medicineData);
-    console.log('Medicine created successfully:', medicine);
     sendResponse(res, 201, true, 'Medicine created', { medicine });
   } catch (error) {
-    console.error('Error creating medicine:', error);
     next(error);
   }
 };
 
 exports.updateMedicine = async (req, res, next) => {
   try {
-    console.log('Updating medicine:', req.params.id, 'by user:', req.user.role);
-    
-    let filter = { _id: req.params.id };
-    
-    // Shop owners can only update medicines from their shop
-    if (req.user.role === 'shop_owner' && req.user.shopId) {
-      filter.shopId = req.user.shopId;
+    const filter = { _id: req.params.id };
+    if (req.user.role === 'shop_owner') {
+      if (!req.shopId) {
+        res.status(400);
+        throw new Error('Your account is not linked to a valid shop');
+      }
+      filter.shopId = req.shopId;
+    } else if (req.shopFilter) {
+      filter.shopId = req.shopFilter;
     }
-    
-    const medicine = await Medicine.findOneAndUpdate(filter, req.body, { new: true });
+
+    const updates = { ...req.body };
+    delete updates.shopId;
+
+    const medicine = await Medicine.findOneAndUpdate(filter, updates, { new: true });
     if (!medicine) {
       res.status(404);
       throw new Error('Medicine not found');
     }
-    console.log('Medicine updated successfully:', medicine);
     sendResponse(res, 200, true, 'Medicine updated', { medicine });
   } catch (error) {
-    console.error('Error updating medicine:', error);
     next(error);
   }
 };
 
 exports.deleteMedicine = async (req, res, next) => {
   try {
-    console.log('Deleting medicine:', req.params.id, 'by user:', req.user.role);
-    
-    let filter = { _id: req.params.id };
-    
-    // Shop owners can only delete medicines from their shop
-    if (req.user.role === 'shop_owner' && req.user.shopId) {
-      filter.shopId = req.user.shopId;
+    const filter = { _id: req.params.id };
+    if (req.user.role === 'shop_owner') {
+      if (!req.shopId) {
+        res.status(400);
+        throw new Error('Your account is not linked to a valid shop');
+      }
+      filter.shopId = req.shopId;
+    } else if (req.shopFilter) {
+      filter.shopId = req.shopFilter;
     }
-    
+
     const medicine = await Medicine.findOneAndUpdate(filter, { isActive: false }, { new: true });
     if (!medicine) {
       res.status(404);
       throw new Error('Medicine not found');
     }
-    console.log('Medicine deleted successfully');
     sendResponse(res, 200, true, 'Medicine deleted');
   } catch (error) {
-    console.error('Error deleting medicine:', error);
     next(error);
   }
 };
 
 exports.getCodeNumberSuggestions = async (req, res, next) => {
   try {
-    const medicines = await Medicine.find({ shopId: req.user.shopId }).distinct('codeNumber');
+    const filter = req.shopId ? { shopId: req.shopId } : {};
+    const medicines = await Medicine.find(filter).distinct('codeNumber');
     sendResponse(res, 200, true, 'Code numbers fetched', { codeNumbers: medicines });
   } catch (error) {
     next(error);

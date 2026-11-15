@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash, FaDownload } from 'react-icons/fa';
+import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
 
 const API_URL = 'http://192.168.31.187:5000/api';
 
@@ -12,6 +13,7 @@ const Supplies = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingSupply, setEditingSupply] = useState(null);
+  const refreshToken = useRefreshOnFocus();
   const [formData, setFormData] = useState({ medicineId: '', vendorId: '', items: [{ medicineId: '', medicineName: '', quantity: '', unitPrice: '', totalPrice: '', batchNumber: '', expiryDate: '' }], totalAmount: '', notes: '' });
 
   const fetchData = async () => {
@@ -33,7 +35,7 @@ const Supplies = ({ user }) => {
     }
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { fetchData(); }, [user, refreshToken]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

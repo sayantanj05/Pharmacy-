@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaPills, FaShoppingCart, FaTruck, FaBoxes, FaCalendarTimes, FaChartBar, FaBell, FaShoppingBasket, FaUsers, FaStore, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { FaTachometerAlt, FaPills, FaShoppingCart, FaTruck, FaBoxes, FaCalendarTimes, FaChartBar, FaBell, FaShoppingBasket, FaUsers, FaStore, FaUser, FaSignOutAlt, FaClipboardList } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import './Sidebar.css';
 
@@ -17,6 +17,7 @@ const iconMap = {
   FaStore,
   FaUser,
   FaSignOutAlt,
+  FaClipboardList,
 };
 
 const Sidebar = ({ items, user, onLogout, isOpen }) => {

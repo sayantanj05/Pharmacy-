@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const medicineSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+    genericName: { type: String },
     codeNumber: { type: String, required: true, unique: true },
     shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop' },
     category: { type: String },

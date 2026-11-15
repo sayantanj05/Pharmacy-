@@ -36,7 +36,11 @@ exports.updateShop = async (req, res, next) => {
   try {
     let filter = { _id: req.params.id };
     if (req.user.role === 'shop_owner') {
-      filter = { _id: req.user.shopId };
+      if (!req.shopId) {
+        res.status(400);
+        throw new Error('Your account is not linked to a valid shop');
+      }
+      filter = { _id: req.shopId };
     }
     const shop = await Shop.findOneAndUpdate(filter, req.body, { new: true });
     if (!shop) {
@@ -54,7 +58,7 @@ exports.deleteShop = async (req, res, next) => {
     const shop = await Shop.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
     if (!shop) {
       res.status(404);
-      throw new Error('Shop not found');
+      throw new Error('Shop deleted');
     }
     sendResponse(res, 200, true, 'Shop deleted');
   } catch (error) {
@@ -64,7 +68,11 @@ exports.deleteShop = async (req, res, next) => {
 
 exports.getCurrentShop = async (req, res, next) => {
   try {
-    const shop = await Shop.findById(req.user.shopId);
+    // `req.shopId` is already resolved to the Shop ObjectId by the shopScope middleware.
+    const shop = req.shopId
+      ? await Shop.findById(req.shopId)
+      : await Shop.findOne({ shopId: String(req.user.shopId || '') });
+
     if (!shop) {
       res.status(404);
       throw new Error('Shop not found');

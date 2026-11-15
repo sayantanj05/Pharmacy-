@@ -1,68 +1,58 @@
-import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { FaTachometerAlt, FaPills, FaBoxes, FaTruck, FaShoppingCart, FaCalendarTimes, FaChartBar, FaUser, FaBars, FaSignOutAlt } from 'react-icons/fa';
+import { NavLink } from 'react-router-dom';
+import {
+  FaTachometerAlt, FaPills, FaShoppingCart, FaTruck, FaBoxes,
+  FaCalendarTimes, FaChartBar, FaClipboardList, FaUser, FaSignOutAlt,
+} from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import './Sidebar.css';
 
-const API_URL = 'http://192.168.31.187:5000/api';
+const iconMap = {
+  FaTachometerAlt,
+  FaPills,
+  FaShoppingCart,
+  FaTruck,
+  FaBoxes,
+  FaCalendarTimes,
+  FaChartBar,
+  FaClipboardList,
+  FaUser,
+  FaSignOutAlt,
+};
 
-const Sidebar = ({ user, onLogout, isOpen, onToggle }) => {
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await fetch(`${API_URL}/auth/logout`, { method: 'POST' });
-    } catch (e) {
-      // ignore
-    }
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    onLogout();
-    navigate('/login');
-  };
-
-  const menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: FaTachometerAlt },
-    { path: '/medicines', label: 'Medicines', icon: FaPills },
-    { path: '/supplies', label: 'Supplies', icon: FaBoxes },
-    { path: '/vendors', label: 'Vendors', icon: FaTruck },
-    { path: '/orders', label: 'Orders', icon: FaShoppingCart },
-    { path: '/expiry-logs', label: 'Expiry Logs', icon: FaCalendarTimes },
-    { path: '/reports', label: 'Reports', icon: FaChartBar },
-    { path: '/profile', label: 'Profile', icon: FaUser },
-  ];
-
+const Sidebar = ({ items, user, onLogout, isOpen }) => {
   return (
-    <div className={`sidebar ${isOpen ? '' : 'collapsed'}`}>
-      <div className="p-3 border-bottom border-secondary">
-        <div className="d-flex align-items-center justify-content-between">
-          {isOpen && <h5 className="mb-0 text-white">Pharmacy Owner</h5>}
-          <button
-            className="btn btn-link text-white p-0"
-            onClick={onToggle}
-            style={{ marginLeft: isOpen ? 'auto' : '0' }}
-          >
-            <FaBars />
-          </button>
-        </div>
+    <motion.div
+      className={`sidebar ${isOpen ? 'open' : 'collapsed'}`}
+      initial={{ x: -250 }}
+      animate={{ x: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+    >
+      <div className="p-4" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+        <h4 className="text-white mb-2" style={{ fontWeight: '700', fontSize: '18px', letterSpacing: '0.5px' }}>Pharmacy Owner</h4>
+        <p className="small mb-0" style={{ color: '#9CA3AF', fontWeight: '500', fontSize: '11px', letterSpacing: '1px' }}>
+          {(user?.role || 'shop owner').replace('_', ' ').toUpperCase()}
+        </p>
       </div>
-      <nav className="mt-3">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-          >
-            <item.icon className="me-2" />
-            {isOpen && item.label}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="mt-auto p-3 border-top border-secondary" style={{ position: 'absolute', bottom: 0, width: '100%' }}>
-        <button className="nav-link text-danger" onClick={handleLogout}>
+      <nav className="nav flex-column px-2">
+        {items.map((item) => {
+          const IconComponent = iconMap[item.icon] || FaTachometerAlt;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            >
+              {IconComponent && <IconComponent className="me-2" />}
+              {item.label}
+            </NavLink>
+          );
+        })}
+        <button className="nav-link btn btn-link text-start p-0 mt-3" onClick={onLogout}>
           <FaSignOutAlt className="me-2" />
-          {isOpen && 'Logout'}
+          Logout
         </button>
-      </div>
-    </div>
+      </nav>
+    </motion.div>
   );
 };
 

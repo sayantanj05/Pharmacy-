@@ -3,7 +3,9 @@ const router = express.Router();
 const systemController = require('../controllers/systemController');
 const { protect, authorize } = require('../middleware/auth');
 
-router.get('/analytics', protect, authorize('super_admin'), systemController.getAnalytics);
-router.put('/settings', protect, authorize('super_admin'), systemController.updateSettings);
+router.use(protect, authorize('super_admin'));
+
+router.get('/analytics', systemController.getAnalytics);
+router.put('/settings', systemController.updateSettings);
 
 module.exports = router;

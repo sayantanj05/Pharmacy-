@@ -1,9 +1,10 @@
 REFERENCES
 Pharmacy Stock & Expiry Tracker Real-Time Application
 
-Version: 1.0
-Date: 2026-11-13
+Version: 1.1
+Date: 2026-11-14
 Status: Final
+Revision: 1.1 adds reference implementations (similar/replica projects) with verified URLs
 
 ================================================================================
 PROJECT DOCUMENTATION
@@ -102,3 +103,123 @@ ACADEMIC & REFERENCE MATERIALS
 50. Fowler, M. "Patterns of Enterprise Application Architecture" - Layered architecture, domain logic
 51. Martin, R.C. "Clean Architecture" - Dependency rule, use cases, entities
 52. Vernon, V. "Implementing Domain-Driven Design" - Bounded contexts, aggregates, repositories
+
+================================================================================
+REFERENCE IMPLEMENTATIONS - SIMILAR / REPLICA PROJECTS
+================================================================================
+
+Open-source systems of the same type (pharmacy / medical-store management,
+medicine inventory with batch and expiry tracking, customer ordering). Every URL
+below was verified reachable on 2026-11-14.
+
+A. FULL PHARMACY MANAGEMENT SYSTEMS (multi-role - closest in scope)
+--------------------------------------------------------------------------------
+
+53. Medley Pharma (MERN) - https://github.com/blessykancharla11/medley-pharma
+    Customer medicine purchase, order management, catalogue exploration, admin
+    dashboard, JWT auth, expired-product blocking, stock tracking.
+
+54. PharmaEZ (MERN + Vite) - https://github.com/HARIHARANS24/VIP-C2---PharmaEZ
+    Pharmacy e-commerce with prescription upload/verification, batch and expiry
+    management, order processing, low-stock alerts, sales reporting.
+
+55. KMP Pharmacy (MERN + Vite) - https://github.com/Ashen496/KMP-Pharmacy
+    Academic pharmacy management system (SLIIT ITP). Useful as an academic
+    precedent for scope, roles and report structure.
+
+56. Pharmacy Management System (MERN) - https://github.com/malithJayasinghe2000/Pharmacy-management-system
+    Pharmacy operations platform built on MongoDB, Express, React and Node.
+
+57. MediStore - Pharmacy Management SaaS (Node/Express/React/MongoDB) -
+    https://github.com/AmjadKhan88/medistore-seo
+    Multi-tenant SaaS pharmacy: medicines, billing, prescriptions, staff,
+    expiry and low-stock handling. Reference for multi-shop (multi-tenant)
+    scaling of this project.
+
+58. PharmaCare (MERN) - https://github.com/younusFoysal/Pharma-Care-Server
+    Inventory, sales, purchase, customer, supplier, reports and user management.
+
+59. Pharmacy Management System (Node/Express/React, dual database) -
+    https://github.com/Maryam-oss/pharmacy-management-system
+    Inventory, sales, users, suppliers and orders with role-based access;
+    compares MongoDB document storage against a relational schema.
+
+B. CUSTOMER-FACING PHARMACY / MEDICAL STORE E-COMMERCE
+--------------------------------------------------------------------------------
+
+60. El7a2ny / Mern-overflow-Pharmacy (MERN) -
+    https://github.com/advanced-computer-lab-2023/Mern-overflow-Pharmacy
+    Patients and pharmacists, cart, multi-payment checkout, order tracking, and
+    ALTERNATIVES for out-of-stock medicines based on active ingredient - the
+    closest match to the Alternatives module of this project.
+
+61. Medical Store Website (MERN + Vite + Tailwind) -
+    https://github.com/ashutoshtripathi837/Medical-Store-Website
+    Product browsing, cart, prescription upload and Razorpay payment flow.
+
+62. MedVerse (React + Vite + Node + MongoDB) - https://github.com/bhavan1519/MedVerse
+    Pharmacy owner and patient roles, FEFO batch selling, low-stock and expiry
+    alerts via scheduled jobs, nearby-pharmacy geospatial search, barcode lookup.
+
+C. INVENTORY, BATCH AND EXPIRY TRACKING (module-level references)
+--------------------------------------------------------------------------------
+
+63. Phamarcy (Next.js + TypeScript + MongoDB) - https://github.com/DerrickMutetiNyaga/Phamarcy
+    Point of sale, per-batch stock, FEFO (first-expiry-first-out) allocation,
+    purchases, prescriptions, expiry reports and user roles. Reference for
+    batch-level expiry logic and stock adjustments.
+
+64. Farmacia (MERN) - https://github.com/addliam/farmacia-proyecto
+    Medicines, categories, batches (lotes), stock entries/exits, user
+    administration, reports and alerts.
+
+65. Pharmacy Management System (FastAPI + PostgreSQL) -
+    https://github.com/Jobayer98/pharmacy-management-system
+    FIFO batch/lot tracking, expiry alerts, low-stock notifications, purchase and
+    sales analytics, PDF/CSV export. Reference for expiry and reporting design
+    on a non-Node stack.
+
+66. Pharmacy Management System (MEAN - Angular + Node + MongoDB) -
+    https://github.com/LalanaChami/Pharmacy-Mangment-System
+    Point of sale, doctor orders, suppliers and dashboard (672 stars). Reference
+    for a mature, widely-used open-source implementation.
+
+D. DISCOVERY - TOPIC INDEXES FOR FURTHER REPLICAS
+--------------------------------------------------------------------------------
+
+67. GitHub Topic: pharmacy-management-system -
+    https://github.com/topics/pharmacy-management-system
+68. GitHub Topic: online-pharmacy - https://github.com/topics/online-pharmacy
+69. GitHub Topic: medicine-expiry - https://github.com/topics/medicine-expiry
+
+================================================================================
+MODULE-TO-REFERENCE MAP
+================================================================================
+
+This project's module          | Reference implementation
+-------------------------------|---------------------------------------------
+Customer catalogue + cart +    | 53 (Medley Pharma), 61 (Medical Store),
+checkout and orders            | 60 (El7a2ny)
+Shop Owner inventory +         | 54 (PharmaEZ), 64 (Farmacia), 62 (MedVerse)
+procurement workflow           |
+Super Admin oversight and      | 57 (MediStore SaaS), 59 (dual database)
+multi-shop scoping             |
+Batch / expiry tracking and    | 63 (Phamarcy), 65 (FastAPI system),
+expiry alerts                  | 62 (MedVerse)
+Alternatives for out-of-stock  | 60 (El7a2ny - active-ingredient alternatives)
+medicine                       |
+Reports and analytics          | 65 (FastAPI system), 58 (PharmaCare)
+Prescription-required flag     | 54 (PharmaEZ), 61 (Medical Store Website)
+Role-based access control      | 63 (Phamarcy), 57 (MediStore), 59
+
+================================================================================
+CANONICAL DOCUMENTATION LINKS (for items 12-47 above)
+================================================================================
+
+70. MongoDB Data Modeling - https://www.mongodb.com/docs/manual/data-modeling/
+71. Mongoose ODM Guide - https://mongoosejs.com/docs/guide.html
+72. JWT (RFC 7519) - https://www.rfc-editor.org/info/rfc7519/
+73. JWT Introduction - https://www.jwt.io/introduction
+74. React Documentation - https://react.dev/
+75. Express.js Documentation - https://expressjs.com/
+76. OWASP Top 10 - https://owasp.org/projects/top-ten

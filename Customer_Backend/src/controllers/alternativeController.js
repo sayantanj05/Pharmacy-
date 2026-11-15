@@ -23,6 +23,7 @@ exports.getAlternatives = async (req, res, next) => {
     for (const alt of mapped) {
       const candidate = alt.alternativeMedicineId;
       if (!candidate || !candidate.isActive || candidate.stock <= 0) continue;
+      if (!candidate.shopId) continue;
       if (mappedIds.has(candidate._id.toString())) continue;
       mappedIds.add(candidate._id.toString());
       alternatives.push({
@@ -43,6 +44,7 @@ exports.getAlternatives = async (req, res, next) => {
         _id: { $ne: medicine._id },
         isActive: true,
         stock: { $gt: 0 },
+        shopId: { $ne: null },
       };
       if (medicine.category) fallbackFilter.category = medicine.category;
       if (medicine.medicineSystem) fallbackFilter.medicineSystem = medicine.medicineSystem;

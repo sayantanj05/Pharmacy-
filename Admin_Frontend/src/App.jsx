@@ -15,6 +15,7 @@ import Vendors from './pages/Vendors';
 import Supplies from './pages/Supplies';
 import ExpiryLogs from './pages/ExpiryLogs';
 import Reports from './pages/Reports';
+import Procurement from './pages/Procurement';
 import Users from './pages/Users';
 import Shops from './pages/Shops';
 import Notifications from './pages/Notifications';
@@ -93,6 +94,7 @@ const App = () => {
       { path: '/supplies', element: <Supplies user={user} /> },
       { path: '/expiry-logs', element: <ExpiryLogs user={user} /> },
       { path: '/reports', element: <Reports user={user} /> },
+      { path: '/procurement', element: <Procurement user={user} /> },
       { path: '/notifications', element: <Notifications user={user} /> },
       { path: '/cart', element: <Cart user={user} /> },
       { path: '/profile', element: <Profile user={user} onLogout={logout} /> },
@@ -119,6 +121,7 @@ const App = () => {
       { path: '/supplies', label: 'Supplies', icon: 'FaBoxes' },
       { path: '/expiry-logs', label: 'Expiry Logs', icon: 'FaCalendarTimes' },
       { path: '/reports', label: 'Reports', icon: 'FaChartBar' },
+      { path: '/procurement', label: 'Procurement', icon: 'FaClipboardList' },
       { path: '/notifications', label: 'Notifications', icon: 'FaBell' },
     ];
 

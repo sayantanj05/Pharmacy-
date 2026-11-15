@@ -1,17 +1,33 @@
-import { FaBell, FaUserCircle } from 'react-icons/fa';
+import { FaBars } from 'react-icons/fa';
 
 const Header = ({ user, onToggleSidebar }) => {
   return (
-    <header className="header bg-white shadow-sm py-3 px-4 d-flex align-items-center justify-content-between">
-      <div className="d-flex align-items-center">
-        <button className="btn btn-link text-dark me-3 p-0" onClick={onToggleSidebar}>
-          <FaBell size={20} />
+    <header className="bg-white shadow-sm py-3 px-4" style={{ borderBottom: '1px solid #E5E7EB' }}>
+      <div className="d-flex justify-content-between align-items-center">
+        <button
+          className="btn btn-link text-dark p-0"
+          onClick={onToggleSidebar}
+          style={{ transition: 'all 0.2s ease' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = '#10B981'}
+          onMouseLeave={(e) => e.currentTarget.style.color = '#111827'}
+        >
+          <FaBars size={24} />
         </button>
-        <h5 className="m-0 d-none d-md-block">Shop Owner Portal</h5>
-      </div>
-      <div className="d-flex align-items-center gap-3">
-        <span className="text-muted d-none d-md-block">{user?.name} ({user?.role})</span>
-        <FaUserCircle size={28} className="text-primary" />
+        <div className="d-flex align-items-center">
+          <span className="me-3" style={{ color: '#6B7280', fontWeight: '500' }}>Welcome, {user?.name}</span>
+          <span
+            className="badge"
+            style={{
+              backgroundColor: '#10B981',
+              fontWeight: '500',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '12px'
+            }}
+          >
+            {user?.role?.replace('_', ' ').toUpperCase()}
+          </span>
+        </div>
       </div>
     </header>
   );

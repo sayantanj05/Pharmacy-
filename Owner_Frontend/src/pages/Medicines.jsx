@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaThLarge, FaTable } from 'react-icons/fa';
-import MedicineCardsContainer from '../components/MedicineCardsContainer';
+import { FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
+import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
 
 const API_URL = 'http://192.168.31.187:5000/api';
 
@@ -12,7 +12,7 @@ const Medicines = ({ user }) => {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState(null);
-  const [viewMode, setViewMode] = useState('cards');
+  const refreshToken = useRefreshOnFocus();
   const [formData, setFormData] = useState({
     name: '', codeNumber: '', category: '', medicineType: 'Tablet', medicineSystem: 'Allopathy',
     manufacturer: '', batchNumber: '', price: '', stock: '', minStockLevel: 10,
@@ -33,7 +33,7 @@ const Medicines = ({ user }) => {
     }
   };
 
-  useEffect(() => { fetchMedicines(); }, [user]);
+  useEffect(() => { fetchMedicines(); }, [user, refreshToken]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -82,31 +82,9 @@ const Medicines = ({ user }) => {
     <div className="p-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Medicines</h2>
-        <div className="d-flex align-items-center gap-2">
-          <div className="btn-group btn-group-sm" role="group" aria-label="View mode">
-            <button
-              type="button"
-              className={`btn btn-outline-secondary ${viewMode === 'cards' ? 'active' : ''}`}
-              onClick={() => setViewMode('cards')}
-              aria-pressed={viewMode === 'cards'}
-              title="Card view"
-            >
-              <FaThLarge />
-            </button>
-            <button
-              type="button"
-              className={`btn btn-outline-secondary ${viewMode === 'table' ? 'active' : ''}`}
-              onClick={() => setViewMode('table')}
-              aria-pressed={viewMode === 'table'}
-              title="Table view"
-            >
-              <FaTable />
-            </button>
-          </div>
-          <button className="btn btn-primary ms-2" onClick={() => { setEditingMedicine(null); setFormData({ name: '', codeNumber: '', category: '', medicineType: 'Tablet', medicineSystem: 'Allopathy', manufacturer: '', batchNumber: '', price: '', stock: '', minStockLevel: 10, description: '', imageUrl: '', prescriptionRequired: false, isActive: true }); setShowModal(true); }}>
-            <FaPlus className="me-2" /> Add Medicine
-          </button>
-        </div>
+        <button className="btn btn-primary" onClick={() => { setEditingMedicine(null); setFormData({ name: '', codeNumber: '', category: '', medicineType: 'Tablet', medicineSystem: 'Allopathy', manufacturer: '', batchNumber: '', price: '', stock: '', minStockLevel: 10, description: '', imageUrl: '', prescriptionRequired: false, isActive: true }); setShowModal(true); }}>
+          <FaPlus className="me-2" /> Add Medicine
+        </button>
       </div>
       <div className="card p-4 mb-4">
         <div className="input-group">
@@ -114,48 +92,39 @@ const Medicines = ({ user }) => {
           <input type="text" className="form-control" placeholder="Search medicines..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
-      {viewMode === 'cards' ? (
-        <MedicineCardsContainer
-          medicines={filtered}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          emptyMessage="No medicines match your search"
-        />
-      ) : (
-        <div className="table-container">
-          <div className="table-responsive">
-            <table className="table table-hover">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Code</th>
-                  <th>Type</th>
-                  <th>System</th>
-                  <th>Stock</th>
-                  <th>Price</th>
-                  <th>Actions</th>
+      <div className="table-container">
+        <div className="table-responsive">
+          <table className="table table-hover">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Type</th>
+                <th>System</th>
+                <th>Stock</th>
+                <th>Price</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((medicine) => (
+                <tr key={medicine._id}>
+                  <td>{medicine.name}</td>
+                  <td>{medicine.codeNumber}</td>
+                  <td>{medicine.medicineType}</td>
+                  <td>{medicine.medicineSystem}</td>
+                  <td>{medicine.stock}</td>
+                  <td>₹{medicine.price}</td>
+                  <td>
+                    <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(medicine)}><FaEdit /></button>
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(medicine._id)}><FaTrash /></button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filtered.map((medicine) => (
-                  <tr key={medicine._id}>
-                    <td>{medicine.name}</td>
-                    <td>{medicine.codeNumber}</td>
-                    <td>{medicine.medicineType}</td>
-                    <td>{medicine.medicineSystem}</td>
-                    <td>{medicine.stock}</td>
-                    <td>₹{medicine.price}</td>
-                    <td>
-                      <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(medicine)}><FaEdit /></button>
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(medicine._id)}><FaTrash /></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       <AnimatePresence>
         {showModal && (

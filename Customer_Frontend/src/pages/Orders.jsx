@@ -60,8 +60,9 @@ const Orders = () => {
               <thead>
                 <tr>
                   <th>Order</th>
+                  <th>Shop</th>
                   <th>Date</th>
-                  <th>Address</th>
+                  <th>Items</th>
                   <th>Amount</th>
                   <th>Payment</th>
                   <th>Status</th>
@@ -72,9 +73,12 @@ const Orders = () => {
                 {orders.map((order) => (
                   <tr key={order._id}>
                     <td>#{order._id.toString().slice(-6)}</td>
+                    <td>{order.shopId?.name || '-'}</td>
                     <td>{new Date(order.createdAt).toLocaleString()}</td>
-                    <td className="text-truncate" style={{ maxWidth: 200 }}>
-                      {order.shippingAddress || '-'}
+                    <td>
+                      {(order.items || [])
+                        .map((item) => `${item.medicineName || 'Item'} x${item.quantity}`)
+                        .join(', ') || '-'}
                     </td>
                     <td>₹{order.totalAmount}</td>
                     <td>{order.paymentStatus}</td>

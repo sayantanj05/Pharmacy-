@@ -2,17 +2,19 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import './index.css';
+
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Medicines from './pages/Medicines';
-import Supplies from './pages/Supplies';
-import Vendors from './pages/Vendors';
 import Orders from './pages/Orders';
+import Vendors from './pages/Vendors';
+import Supplies from './pages/Supplies';
 import ExpiryLogs from './pages/ExpiryLogs';
 import Reports from './pages/Reports';
+import Procurement from './pages/Procurement';
 import Profile from './pages/Profile';
 
 const API_URL = 'http://192.168.31.187:5000/api';
@@ -75,33 +77,53 @@ const App = () => {
   }
 
   if (!user) {
-    return <Login onLogin={(u) => { setUser(u); }} />;
+    return <Login onLogin={login} />;
   }
 
-  const ownerRoutes = [
+  const routes = [
     { path: '/dashboard', element: <Dashboard user={user} /> },
     { path: '/medicines', element: <Medicines user={user} /> },
-    { path: '/supplies', element: <Supplies user={user} /> },
-    { path: '/vendors', element: <Vendors user={user} /> },
     { path: '/orders', element: <Orders user={user} /> },
+    { path: '/vendors', element: <Vendors user={user} /> },
+    { path: '/supplies', element: <Supplies user={user} /> },
     { path: '/expiry-logs', element: <ExpiryLogs user={user} /> },
     { path: '/reports', element: <Reports user={user} /> },
+    { path: '/procurement', element: <Procurement user={user} /> },
     { path: '/profile', element: <Profile user={user} onLogout={logout} /> },
+  ];
+
+  const getSidebarItems = () => [
+    { path: '/dashboard', label: 'Dashboard', icon: 'FaTachometerAlt' },
+    { path: '/medicines', label: 'Medicines', icon: 'FaPills' },
+    { path: '/orders', label: 'Orders', icon: 'FaShoppingCart' },
+    { path: '/vendors', label: 'Vendors', icon: 'FaTruck' },
+    { path: '/supplies', label: 'Supplies', icon: 'FaBoxes' },
+    { path: '/expiry-logs', label: 'Expiry Logs', icon: 'FaCalendarTimes' },
+    { path: '/reports', label: 'Reports', icon: 'FaChartBar' },
+    { path: '/procurement', label: 'Procurement', icon: 'FaClipboardList' },
+    { path: '/profile', label: 'Profile', icon: 'FaUser' },
   ];
 
   return (
     <div className="d-flex">
-      <Sidebar items={[]} user={user} onLogout={logout} isOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      <Sidebar items={getSidebarItems()} user={user} onLogout={logout} isOpen={sidebarOpen} />
       <div className="flex-grow-1" style={{ marginLeft: sidebarOpen ? '250px' : '0' }}>
         <Header user={user} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <main className="main-content">
           <AnimatePresence mode="wait">
-            <Routes>
-              {ownerRoutes.map((route) => (
-                <Route key={route.path} path={route.path} element={route.element} />
-              ))}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Routes>
+                {routes.map((route) => (
+                  <Route key={route.path} path={route.path} element={route.element} />
+                ))}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </motion.div>
           </AnimatePresence>
         </main>
       </div>

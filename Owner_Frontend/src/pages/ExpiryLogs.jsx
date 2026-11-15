@@ -2,81 +2,9 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSyncAlt } from 'react-icons/fa';
+import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
 
 const API_URL = 'http://192.168.31.187:5000/api';
-
-const getExpiryStatus = (expiryDate) => {
-  if (!expiryDate) return { labelText: 'N/A', bgColor: '#6b7280', textColor: '#ffffff' };
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const exp = new Date(expiryDate);
-  exp.setHours(0, 0, 0, 0);
-
-  const diffTime = exp.getTime() - today.getTime();
-  const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (daysLeft <= 0) {
-    return { labelText: 'Expired', bgColor: '#ef4444', textColor: '#ffffff' };
-  } else if (daysLeft === 1 || daysLeft === 2) {
-    return { labelText: `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left`, bgColor: '#f97316', textColor: '#ffffff' };
-  } else if (daysLeft >= 3 && daysLeft <= 5) {
-    return { labelText: `${daysLeft} days left`, bgColor: '#f59e0b', textColor: '#ffffff' };
-  } else if (daysLeft >= 6 && daysLeft <= 10) {
-    return { labelText: `${daysLeft} days left`, bgColor: '#eab308', textColor: '#000000' };
-  } else if (daysLeft >= 11 && daysLeft <= 20) {
-    return { labelText: `${daysLeft} days left`, bgColor: '#0ea5e9', textColor: '#ffffff' };
-  } else if (daysLeft >= 21 && daysLeft <= 31) {
-    return { labelText: (daysLeft >= 28 && daysLeft <= 31) ? '1 month left' : `${daysLeft} days left`, bgColor: '#8b5cf6', textColor: '#ffffff' };
-  } else {
-    return { labelText: `${daysLeft} days left`, bgColor: '#10b981', textColor: '#ffffff' };
-  }
-};
-
-const MedicineImage = ({ src, alt }) => {
-  const [hasError, setHasError] = useState(false);
-
-  if (!src || hasError) {
-    return (
-      <div
-        style={{
-          width: '65px',
-          height: '65px',
-          backgroundColor: '#f3f4f6',
-          borderRadius: '10px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '11px',
-          color: '#6b7280',
-          fontWeight: '600',
-          flexShrink: 0,
-          border: '1px solid #e5e7eb'
-        }}
-      >
-        No Img
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      style={{
-        width: '65px',
-        height: '65px',
-        objectFit: 'cover',
-        borderRadius: '10px',
-        flexShrink: 0,
-        boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
-        border: '1px solid #f0f0f0'
-      }}
-      onError={() => setHasError(true)}
-    />
-  );
-};
 
 const ExpiryLogs = ({ user }) => {
   const [logs, setLogs] = useState([]);
@@ -84,6 +12,7 @@ const ExpiryLogs = ({ user }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
   const [replacementData, setReplacementData] = useState({ vendorId: '', notes: '' });
+  const refreshToken = useRefreshOnFocus();
 
   const fetchLogs = async () => {
     try {
@@ -99,7 +28,7 @@ const ExpiryLogs = ({ user }) => {
     }
   };
 
-  useEffect(() => { fetchLogs(); }, [user]);
+  useEffect(() => { fetchLogs(); }, [user, refreshToken]);
 
   const handleReplacement = async (e) => {
     e.preventDefault();
@@ -121,7 +50,7 @@ const ExpiryLogs = ({ user }) => {
       <h2 className="mb-4">Expiry Logs</h2>
       <div className="table-container">
         <div className="table-responsive">
-          <table className="table table-hover align-middle">
+          <table className="table table-hover">
             <thead>
               <tr>
                 <th>Medicine</th>
@@ -136,33 +65,17 @@ const ExpiryLogs = ({ user }) => {
               {logs.map((log) => {
                 const med = log.medicineId || log.medicine || log;
                 const medicineName = med.name || log.medicineName || 'N/A';
-                const imageUrl = med.imageUrl || log.imageUrl;
                 const expiryDate = log.expiryDate || med.expiryDate;
-                const quantity = log.quantity ?? med.stock ?? log.quantityExpired ?? 0;
-                const statusInfo = getExpiryStatus(expiryDate);
+                const quantity = log.quantity ?? log.quantityExpired ?? med.stock ?? 0;
 
                 return (
                   <tr key={log._id}>
-                    <td>
-                      <div className="d-flex align-items-center gap-3">
-                        <MedicineImage src={imageUrl} alt={medicineName} />
-                        <span className="fw-semibold text-dark">{medicineName}</span>
-                      </div>
-                    </td>
+                    <td>{medicineName}</td>
                     <td>{expiryDate ? new Date(expiryDate).toLocaleDateString() : 'N/A'}</td>
                     <td>{quantity}</td>
                     <td>
-                      <span
-                        className="badge px-3 py-2 text-wrap"
-                        style={{
-                          backgroundColor: statusInfo.bgColor,
-                          color: statusInfo.textColor,
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          borderRadius: '6px'
-                        }}
-                      >
-                        {statusInfo.labelText}
+                      <span className={`badge bg-${log.status === 'replaced' ? 'success' : log.status === 'requested' ? 'warning' : 'danger'}`}>
+                        {log.status}
                       </span>
                     </td>
                     <td>{log.replacementRequested ? 'Yes' : 'No'}</td>

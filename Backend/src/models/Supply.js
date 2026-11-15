@@ -1,24 +1,27 @@
 const mongoose = require('mongoose');
 
+const supplyItemSchema = new mongoose.Schema(
+  {
+    medicineId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine', required: true },
+    quantity: { type: Number, required: true, min: 1 },
+    price: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
 const supplySchema = new mongoose.Schema(
   {
-    shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
-    vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
-    date: { type: Date, default: Date.now },
-    items: [
-      {
-        medicineId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine' },
-        medicineName: { type: String },
-        quantity: { type: Number, required: true },
-        unitPrice: { type: Number, required: true },
-        totalPrice: { type: Number, required: true },
-        batchNumber: { type: String },
-        expiryDate: { type: Date },
-      },
-    ],
-    totalAmount: { type: Number, required: true },
+    shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop' },
+    vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
+    codeNumber: { type: String },
+    invoiceNumber: { type: String },
+    batchNumber: { type: String },
+    expiryDate: { type: Date },
+    supplyDate: { type: Date, default: Date.now },
+    items: [supplyItemSchema],
+    totalAmount: { type: Number, default: 0 },
     notes: { type: String },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
