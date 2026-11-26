@@ -61,6 +61,8 @@ app.get('/', (req, res) => {
   res.json({
     message: 'Pharmacy Stock & Expiry Tracker API',
     Database: states[mongoose.connection.readyState] === 'connected' ? 'Connected' : states[mongoose.connection.readyState] || 'disconnected',
+    mongoUriSet: Boolean(process.env.MONGODB_URI),
+    mongoDbName: process.env.MONGODB_DB_NAME || null,
   });
 });
 
