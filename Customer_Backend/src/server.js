@@ -34,7 +34,11 @@ app.use(cors({
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Pharmacy Customer API' });
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  res.json({
+    message: 'Pharmacy Customer API',
+    Database: states[mongoose.connection.readyState] === 'connected' ? 'Connected' : states[mongoose.connection.readyState] || 'disconnected',
+  });
 });
 
 const mongoose = require('mongoose');

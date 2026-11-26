@@ -56,7 +56,12 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Pharmacy Stock & Expiry Tracker API' });
+  const mongoose = require('mongoose');
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  res.json({
+    message: 'Pharmacy Stock & Expiry Tracker API',
+    Database: states[mongoose.connection.readyState] === 'connected' ? 'Connected' : states[mongoose.connection.readyState] || 'disconnected',
+  });
 });
 
 app.use('/api/auth', authRoutes);
