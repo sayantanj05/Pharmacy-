@@ -63,6 +63,7 @@ app.get('/', (req, res) => {
     Database: states[mongoose.connection.readyState] === 'connected' ? 'Connected' : states[mongoose.connection.readyState] || 'disconnected',
     mongoUriSet: Boolean(process.env.MONGODB_URI),
     mongoDbName: process.env.MONGODB_DB_NAME || null,
+    mongoError: connectDB.getLastError ? connectDB.getLastError() : null,
   });
 });
 
