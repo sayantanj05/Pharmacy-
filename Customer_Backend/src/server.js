@@ -37,8 +37,16 @@ app.get('/', (req, res) => {
   res.json({ message: 'Pharmacy Customer API' });
 });
 
+const mongoose = require('mongoose');
+
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Customer API healthy' });
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  res.json({
+    success: true,
+    message: 'Customer API healthy',
+    mongoState: states[mongoose.connection.readyState] || mongoose.connection.readyState,
+    mongoHost: mongoose.connection.host || null,
+  });
 });
 
 app.use('/api/auth', authRoutes);
