@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Shops = () => {
   const [shops, setShops] = useState([]);
@@ -13,11 +11,8 @@ const Shops = () => {
 
   const fetchShops = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const res = await axios.get(`${API_URL}/shops`, { headers });
-      console.log('Shops response:', res.data);
+      const res = await api.get('/shops');
       const shopsData = res.data.data?.shops || res.data.shops || [];
-      console.log('Setting shops with:', shopsData.length, 'items');
       setShops(shopsData);
     } catch (error) {
       console.error('Error fetching shops:', error);
@@ -30,15 +25,12 @@ const Shops = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      console.log('Submitting shop data:', formData);
       if (editingShop) {
-        await axios.put(`${API_URL}/shops/${editingShop._id}`, formData, { headers });
+        await api.put(`/shops/${editingShop._id}`, formData);
       } else {
-        await axios.post(`${API_URL}/shops`, formData, { headers });
+        await api.post('/shops', formData);
       }
-      console.log('Shop saved successfully');
       setShowModal(false);
       setEditingShop(null);
       setFormData({ shopId: '', name: '', address: { street: '', city: '', state: '', pincode: '' }, phone: '', email: '', licenseNumber: '', gstNumber: '' });
@@ -49,18 +41,14 @@ const Shops = () => {
   };
 
   const handleEdit = (shop) => {
-    console.log('Editing shop:', shop);
     setEditingShop(shop);
     setFormData({ ...shop, address: shop.address || { street: '', city: '', state: '', pincode: '' } });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      console.log('Deleting shop:', id);
-      await axios.delete(`${API_URL}/shops/${id}`, { headers });
-      console.log('Shop deleted successfully');
+      await api.delete(`/shops/${id}`);
       fetchShops();
     } catch (error) {
       console.error('Error deleting shop:', error.response?.data || error.message);

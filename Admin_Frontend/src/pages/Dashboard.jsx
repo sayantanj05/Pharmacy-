@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { motion } from 'framer-motion';
 import { FaPills, FaShoppingCart, FaTruck, FaBoxes, FaChartBar, FaChartPie, FaChartLine, FaCircle } from 'react-icons/fa';
 import {
@@ -7,8 +7,6 @@ import {
   PieChart, Pie, Cell, Legend,
   LineChart, Line,
 } from 'recharts';
-
-const API_URL = 'http://localhost:5000/api';
 
 const COLORS = ['#10B981', '#0EA5E9', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
@@ -27,12 +25,11 @@ const Dashboard = ({ user }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
         const [medicinesRes, ordersRes, vendorsRes, suppliesRes] = await Promise.all([
-          axios.get(`${API_URL}/medicines`, { headers }),
-          axios.get(`${API_URL}/orders`, { headers }),
-          axios.get(`${API_URL}/vendors`, { headers }),
-          axios.get(`${API_URL}/supplies`, { headers }),
+          api.get('/medicines'),
+          api.get('/orders'),
+          api.get('/vendors'),
+          api.get('/supplies'),
         ]);
         const medicinesPayload = medicinesRes.data.data?.medicines || medicinesRes.data.medicines || [];
         const ordersPayload = ordersRes.data.data?.orders || ordersRes.data.orders || [];

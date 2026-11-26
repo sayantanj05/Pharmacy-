@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { motion } from 'framer-motion';
 import { FaPills, FaShoppingCart, FaTruck, FaBoxes, FaChartBar, FaChartPie, FaChartLine, FaCircle } from 'react-icons/fa';
 import {
@@ -8,7 +8,6 @@ import {
   LineChart, Line,
 } from 'recharts';
 
-const API_URL = 'http://192.168.31.187:5000/api';
 const COLORS = ['#10B981', '#0EA5E9', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
 const Dashboard = ({ user }) => {
@@ -21,13 +20,12 @@ const Dashboard = ({ user }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
         const shopFilter = user?.shopId ? `?shopId=${user.shopId}` : '';
         const [medicinesRes, ordersRes, vendorsRes, suppliesRes] = await Promise.all([
-          axios.get(`${API_URL}/medicines${shopFilter}`, { headers }),
-          axios.get(`${API_URL}/orders${shopFilter ? '?shopId=' + user.shopId : ''}`, { headers }),
-          axios.get(`${API_URL}/vendors${shopFilter}`, { headers }),
-          axios.get(`${API_URL}/supplies${shopFilter}`, { headers }),
+          api.get(`/medicines${shopFilter}`),
+          api.get(`/orders${shopFilter ? '?shopId=' + user.shopId : ''}`),
+          api.get(`/vendors${shopFilter}`),
+          api.get(`/supplies${shopFilter}`),
         ]);
         const medicinesPayload = medicinesRes.data.data?.medicines || medicinesRes.data.medicines || [];
         const ordersPayload = ordersRes.data.data?.orders || ordersRes.data.orders || [];

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaTrash } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Cart = ({ user }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -10,8 +8,7 @@ const Cart = ({ user }) => {
 
   const fetchCart = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const res = await axios.get(`${API_URL}/cart`, { headers });
+      const res = await api.get('/cart');
       setCartItems(res.data.cartItems || []);
     } catch (error) {
       console.error('Error fetching cart:', error);
@@ -23,9 +20,8 @@ const Cart = ({ user }) => {
   useEffect(() => { fetchCart(); }, []);
 
   const removeFromCart = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.delete(`${API_URL}/cart/${id}`, { headers });
+      await api.delete(`/cart/${id}`);
       setCartItems(cartItems.filter(item => item._id !== id));
     } catch (error) {
       console.error('Error removing from cart:', error);
@@ -33,14 +29,13 @@ const Cart = ({ user }) => {
   };
 
   const checkout = async () => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
       const items = cartItems.map(item => ({
         medicineId: item.medicineId._id,
         quantity: item.quantity,
         shopId: item.medicineId.shopId
       }));
-      await axios.post(`${API_URL}/orders`, { items }, { headers });
+      await api.post('/orders', { items });
       setCartItems([]);
       alert('Order placed successfully!');
     } catch (error) {

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import './index.css';
+import api from './services/api';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -22,8 +22,6 @@ import Notifications from './pages/Notifications';
 import Cart from './pages/Cart';
 import Profile from './pages/Profile';
 
-const API_URL = 'http://localhost:5000/api';
-
 const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +35,6 @@ const App = () => {
         const parsed = JSON.parse(userData);
         if (parsed && typeof parsed === 'object') {
           setUser(parsed);
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         } else {
           localStorage.removeItem('user');
         }
@@ -50,11 +47,10 @@ const App = () => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
       return { success: true };
     } catch (error) {
@@ -65,7 +61,6 @@ const App = () => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
   };
 

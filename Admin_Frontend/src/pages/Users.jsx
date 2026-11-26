@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Users = ({ user }) => {
   const [users, setUsers] = useState([]);
@@ -14,13 +12,8 @@ const Users = ({ user }) => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('Fetching users with token:', token ? 'Token exists' : 'No token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get(`${API_URL}/users`, { headers });
-      console.log('Users response:', res.data);
+      const res = await api.get('/users');
       const usersData = res.data.data?.users || [];
-      console.log('Setting users state with:', usersData.length, 'users');
       setUsers(usersData);
     } catch (error) {
       console.error('Error fetching users:', error.response?.data || error.message);
@@ -35,15 +28,12 @@ const Users = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      console.log('Submitting user data:', formData);
       if (editingUser) {
-        await axios.put(`${API_URL}/users/${editingUser._id}`, formData, { headers });
+        await api.put(`/users/${editingUser._id}`, formData);
       } else {
-        await axios.post(`${API_URL}/users`, formData, { headers });
+        await api.post('/users', formData);
       }
-      console.log('User saved successfully, fetching users...');
       setShowModal(false);
       setEditingUser(null);
       setFormData({ name: '', email: '', password: '', role: 'customer', shopId: '' });
@@ -61,9 +51,8 @@ const Users = ({ user }) => {
   };
 
   const handleDelete = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.delete(`${API_URL}/users/${id}`, { headers });
+      await api.delete(`/users/${id}`);
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);

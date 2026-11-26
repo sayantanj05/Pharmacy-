@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Vendors = ({ user }) => {
   const [vendors, setVendors] = useState([]);
@@ -13,11 +11,8 @@ const Vendors = ({ user }) => {
 
   const fetchVendors = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const res = await axios.get(`${API_URL}/vendors`, { headers });
-      console.log('Vendors response:', res.data);
+      const res = await api.get('/vendors');
       const vendorsData = res.data.data?.vendors || res.data.vendors || [];
-      console.log('Setting vendors with:', vendorsData.length, 'items');
       setVendors(vendorsData);
     } catch (error) {
       console.error('Error fetching vendors:', error);
@@ -30,15 +25,12 @@ const Vendors = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      console.log('Submitting vendor data:', formData);
       if (editingVendor) {
-        await axios.put(`${API_URL}/vendors/${editingVendor._id}`, formData, { headers });
+        await api.put(`/vendors/${editingVendor._id}`, formData);
       } else {
-        await axios.post(`${API_URL}/vendors`, formData, { headers });
+        await api.post('/vendors', formData);
       }
-      console.log('Vendor saved successfully');
       setShowModal(false);
       setEditingVendor(null);
       setFormData({ name: '', email: '', phone: '', address: '', gstNumber: '' });
@@ -49,18 +41,14 @@ const Vendors = ({ user }) => {
   };
 
   const handleEdit = (vendor) => {
-    console.log('Editing vendor:', vendor);
     setEditingVendor(vendor);
     setFormData({ ...vendor });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      console.log('Deleting vendor:', id);
-      await axios.delete(`${API_URL}/vendors/${id}`, { headers });
-      console.log('Vendor deleted successfully');
+      await api.delete(`/vendors/${id}`);
       fetchVendors();
     } catch (error) {
       console.error('Error deleting vendor:', error.response?.data || error.message);

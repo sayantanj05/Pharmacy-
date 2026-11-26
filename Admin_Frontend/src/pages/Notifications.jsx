@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaCheck, FaTrash } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Notifications = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
@@ -11,9 +9,8 @@ const Notifications = ({ user }) => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-        const res = await axios.get(`${API_URL}/notifications`, { headers });
-        setNotifications(res.data.notifications || []);
+        const res = await api.get('/notifications');
+        setNotifications(res.data.notifications || res.data.data?.notifications || []);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       } finally {
@@ -24,9 +21,8 @@ const Notifications = ({ user }) => {
   }, []);
 
   const markAsRead = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.put(`${API_URL}/notifications/${id}/read`, {}, { headers });
+      await api.put(`/notifications/${id}/read`);
       setNotifications(notifications.map(n => n._id === id ? { ...n, isRead: true } : n));
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -34,9 +30,8 @@ const Notifications = ({ user }) => {
   };
 
   const deleteNotification = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.delete(`${API_URL}/notifications/${id}`, { headers });
+      await api.delete(`/notifications/${id}`);
       setNotifications(notifications.filter(n => n._id !== id));
     } catch (error) {
       console.error('Error deleting notification:', error);

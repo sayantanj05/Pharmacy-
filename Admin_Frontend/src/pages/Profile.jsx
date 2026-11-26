@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaSave } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Profile = ({ user, onLogout }) => {
   const [formData, setFormData] = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '' });
@@ -11,10 +9,9 @@ const Profile = ({ user, onLogout }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const res = await axios.put(`${API_URL}/auth/profile`, formData, { headers });
+      const res = await api.put('/auth/profile', formData);
       setMessage('Profile updated successfully');
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.setItem('user', JSON.stringify(res.data.data?.user || res.data.user));
     } catch (error) {
       setMessage(error.response?.data?.message || 'Update failed');
     }

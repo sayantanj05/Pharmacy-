@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import api from '../services/api';
 
 const getExpiryStatus = (expiryDate) => {
   if (!expiryDate) return { labelText: 'N/A', bgColor: '#6b7280', textColor: '#ffffff' };
@@ -111,8 +109,7 @@ const ExpiryLogs = ({ user }) => {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-        const res = await axios.get(`${API_URL}/expiry-logs`, { headers });
+        const res = await api.get('/expiry-logs');
         const data = res.data.data?.logs || res.data.logs || res.data.data?.expiryLogs || res.data.expiryLogs || [];
         setLogs(data);
       } catch (error) {

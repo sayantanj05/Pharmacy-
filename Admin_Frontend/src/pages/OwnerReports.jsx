@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { motion } from 'framer-motion';
 import { FaChartBar, FaChartPie, FaChartLine } from 'react-icons/fa';
 import {
@@ -8,7 +8,6 @@ import {
   LineChart, Line,
 } from 'recharts';
 
-const API_URL = 'http://192.168.31.187:5000/api';
 const COLORS = ['#10B981', '#0EA5E9', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
 const Reports = ({ user }) => {
@@ -21,12 +20,11 @@ const Reports = ({ user }) => {
   const fetchReport = async () => {
     setLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       const params = {};
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       if (user?.shopId) params.shopId = user.shopId;
-      const res = await axios.get(`${API_URL}/reports/financial`, { headers, params });
+      const res = await api.get('/reports/financial', { params });
       setReport(res.data);
     } catch (error) {
       console.error('Error fetching report:', error);

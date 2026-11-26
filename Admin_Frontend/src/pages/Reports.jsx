@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaDownload } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Reports = ({ user }) => {
   const [report, setReport] = useState(null);
@@ -13,11 +11,10 @@ const Reports = ({ user }) => {
   const fetchReport = async () => {
     setLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       const params = {};
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
-      const res = await axios.get(`${API_URL}/reports/financial`, { headers, params });
+      const res = await api.get('/reports/financial', { params });
       setReport(res.data);
     } catch (error) {
       console.error('Error fetching report:', error);
@@ -27,9 +24,8 @@ const Reports = ({ user }) => {
   };
 
   const downloadPDF = async () => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      const res = await axios.get(`${API_URL}/reports/financial/pdf`, { headers, responseType: 'blob' });
+      const res = await api.get('/reports/financial/pdf', { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;

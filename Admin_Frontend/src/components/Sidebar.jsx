@@ -40,7 +40,6 @@ const Sidebar = ({ items, user, onLogout, isOpen }) => {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              onClick={item.label === 'Profile' ? onLogout : undefined}
             >
               {IconComponent && <IconComponent className="me-2" />}
               {item.label}

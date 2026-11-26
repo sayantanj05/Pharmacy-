@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import api from '../services/api';
 
 const Orders = ({ user }) => {
   const [orders, setOrders] = useState([]);
@@ -10,9 +8,8 @@ const Orders = ({ user }) => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-        const res = await axios.get(`${API_URL}/orders`, { headers });
-        setOrders(res.data.orders || []);
+        const res = await api.get('/orders');
+        setOrders(res.data.data?.orders || res.data.orders || []);
       } catch (error) {
         console.error('Error fetching orders:', error);
       } finally {
@@ -23,9 +20,8 @@ const Orders = ({ user }) => {
   }, []);
 
   const handleCancel = async (orderId) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.post(`${API_URL}/orders/${orderId}/cancel`, {}, { headers });
+      await api.post(`/orders/${orderId}/cancel`);
       setOrders(orders.map(o => o._id === orderId ? { ...o, status: 'cancelled' } : o));
     } catch (error) {
       console.error('Error cancelling order:', error);

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaDownload } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Supplies = ({ user }) => {
   const [supplies, setSupplies] = useState([]);
@@ -11,9 +9,8 @@ const Supplies = ({ user }) => {
   useEffect(() => {
     const fetchSupplies = async () => {
       try {
-        const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-        const res = await axios.get(`${API_URL}/supplies`, { headers });
-        setSupplies(res.data.supplies || []);
+        const res = await api.get('/supplies');
+        setSupplies(res.data.supplies || res.data.data?.supplies || []);
       } catch (error) {
         console.error('Error fetching supplies:', error);
       } finally {
@@ -24,9 +21,8 @@ const Supplies = ({ user }) => {
   }, []);
 
   const downloadPDF = async (supplyId) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      const res = await axios.get(`${API_URL}/supplies/${supplyId}/pdf`, { headers, responseType: 'blob' });
+      const res = await api.get(`/supplies/${supplyId}/pdf`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;

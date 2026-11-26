@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { motion } from 'framer-motion';
-
-const API_URL = 'http://192.168.31.187:5000/api';
 
 const Orders = ({ user }) => {
   const [orders, setOrders] = useState([]);
@@ -10,9 +8,8 @@ const Orders = ({ user }) => {
 
   const fetchOrders = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       const shopFilter = user?.shopId ? `?shopId=${user.shopId}` : '';
-      const res = await axios.get(`${API_URL}/orders${shopFilter ? '?shopId=' + user.shopId : ''}`, { headers });
+      const res = await api.get(`/orders${shopFilter ? '?shopId=' + user.shopId : ''}`);
       const payload = res.data.data?.orders || res.data.orders || [];
       setOrders(payload);
     } catch (error) {
@@ -25,9 +22,8 @@ const Orders = ({ user }) => {
   useEffect(() => { fetchOrders(); }, [user]);
 
   const updateStatus = async (orderId, status) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.put(`${API_URL}/orders/${orderId}`, { status }, { headers });
+      await api.put(`/orders/${orderId}`, { status });
       fetchOrders();
     } catch (error) {
       console.error('Error updating order:', error);

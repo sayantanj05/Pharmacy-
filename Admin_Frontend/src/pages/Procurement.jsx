@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { FaCheck, FaTimes, FaBoxOpen } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const statusBadge = (status) => {
   const map = {
@@ -22,13 +20,10 @@ const Procurement = ({ user }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/procurement`, {
-        headers,
+      const res = await api.get('/procurement', {
         params: status ? { status } : {},
       });
       setRequests(res.data.data.procurements || []);
@@ -47,7 +42,7 @@ const Procurement = ({ user }) => {
     setError('');
     setMessage('');
     try {
-      await axios.put(`${API_URL}/procurement/${id}/status`, { status: nextStatus }, { headers });
+      await api.put(`/procurement/${id}/status`, { status: nextStatus });
       setMessage(`Request ${nextStatus}.`);
       fetchRequests();
     } catch (err) {

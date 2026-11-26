@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
-
-const API_URL = 'http://192.168.31.187:5000/api';
 
 const Vendors = ({ user }) => {
   const [vendors, setVendors] = useState([]);
@@ -14,9 +12,8 @@ const Vendors = ({ user }) => {
 
   const fetchVendors = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       const shopFilter = user?.shopId ? `?shopId=${user.shopId}` : '';
-      const res = await axios.get(`${API_URL}/vendors${shopFilter}`, { headers });
+      const res = await api.get(`/vendors${shopFilter}`);
       const payload = res.data.data?.vendors || res.data.vendors || [];
       setVendors(payload);
     } catch (error) {
@@ -30,12 +27,11 @@ const Vendors = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
       if (editingVendor) {
-        await axios.put(`${API_URL}/vendors/${editingVendor._id}`, formData, { headers });
+        await api.put(`/vendors/${editingVendor._id}`, formData);
       } else {
-        await axios.post(`${API_URL}/vendors`, formData, { headers });
+        await api.post('/vendors', formData);
       }
       setShowModal(false);
       setEditingVendor(null);
@@ -53,9 +49,8 @@ const Vendors = ({ user }) => {
   };
 
   const handleDelete = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.delete(`${API_URL}/vendors/${id}`, { headers });
+      await api.delete(`/vendors/${id}`);
       fetchVendors();
     } catch (error) {
       console.error('Error deleting vendor:', error);

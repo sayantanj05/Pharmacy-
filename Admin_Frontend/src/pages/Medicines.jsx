@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { motion } from 'framer-motion';
 import { FaEdit, FaTrash, FaPlus, FaSearch } from 'react-icons/fa';
-
-const API_URL = 'http://localhost:5000/api';
 
 const Medicines = ({ user }) => {
   const [medicines, setMedicines] = useState([]);
@@ -19,11 +17,8 @@ const Medicines = ({ user }) => {
 
   const fetchMedicines = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const res = await axios.get(`${API_URL}/medicines`, { headers });
-      console.log('Medicines response:', res.data);
+      const res = await api.get('/medicines');
       const medicinesData = res.data.data?.medicines || res.data.medicines || [];
-      console.log('Setting medicines with:', medicinesData.length, 'items');
       setMedicines(medicinesData);
     } catch (error) {
       console.error('Error fetching medicines:', error);
@@ -42,12 +37,11 @@ const Medicines = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
       if (editingMedicine) {
-        await axios.put(`${API_URL}/medicines/${editingMedicine._id}`, formData, { headers });
+        await api.put(`/medicines/${editingMedicine._id}`, formData);
       } else {
-        await axios.post(`${API_URL}/medicines`, formData, { headers });
+        await api.post('/medicines', formData);
       }
       setShowModal(false);
       setEditingMedicine(null);
@@ -59,16 +53,14 @@ const Medicines = ({ user }) => {
   };
 
   const handleEdit = (medicine) => {
-    console.log('Editing medicine:', medicine);
     setEditingMedicine(medicine);
     setFormData({ ...medicine });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.delete(`${API_URL}/medicines/${id}`, { headers });
+      await api.delete(`/medicines/${id}`);
       fetchMedicines();
     } catch (error) {
       console.error('Error deleting medicine:', error);
