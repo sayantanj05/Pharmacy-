@@ -46,6 +46,9 @@ app.get('/api/health', (req, res) => {
     message: 'Customer API healthy',
     mongoState: states[mongoose.connection.readyState] || mongoose.connection.readyState,
     mongoHost: mongoose.connection.host || null,
+    mongoUriSet: Boolean(process.env.MONGODB_URI),
+    mongoDbName: process.env.MONGODB_DB_NAME || null,
+    nodeEnv: process.env.NODE_ENV || null,
   });
 });
 
