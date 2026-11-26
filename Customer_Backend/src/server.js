@@ -14,8 +14,21 @@ const alternativeRoutes = require('./routes/alternativeRoutes');
 const app = express();
 connectDB();
 
+const allowedOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? false : '*',
+  origin: process.env.NODE_ENV === 'production'
+    ? (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error(`Origin ${origin} not allowed by CORS`));
+        }
+      }
+    : '*',
   credentials: true,
 }));
 app.use(express.json());
