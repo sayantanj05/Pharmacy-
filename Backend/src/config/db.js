@@ -1,4 +1,9 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Atlas IP Access List only supports IPv4 CIDR (0.0.0.0/0); prefer IPv4
+// so serverless IPv6 egress doesn't get rejected.
+dns.setDefaultResultOrder('ipv4first');
 
 let lastError = null;
 
