@@ -49,6 +49,7 @@ app.get('/api/health', (req, res) => {
     mongoUriSet: Boolean(process.env.MONGODB_URI),
     mongoDbName: process.env.MONGODB_DB_NAME || null,
     nodeEnv: process.env.NODE_ENV || null,
+    envNames: Object.keys(process.env).filter((k) => /MONGO|JWT|CLIENT|VERCEL/i.test(k)),
   });
 });
 
