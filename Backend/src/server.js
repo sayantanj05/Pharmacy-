@@ -52,6 +52,7 @@ app.get('/', (req, res) => {
     mongoDbName: process.env.MONGODB_DB_NAME || null,
     mongoUriHost: (process.env.MONGODB_URI || '').replace(/^mongodb(\+srv)?:\/\/[^@]*@/, '').split('/')[0] || null,
     mongoError: connectDB.getLastError ? connectDB.getLastError() : null,
+    vercelRegion: process.env.VERCEL_REGION || null,
   });
 });
 
