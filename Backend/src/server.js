@@ -42,7 +42,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  await connectDB(); // Ensure connection attempt completes
   const mongoose = require('mongoose');
   const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
   res.json({
