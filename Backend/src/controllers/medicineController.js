@@ -1,4 +1,5 @@
 const Medicine = require('../models/Medicine');
+const Shop = require('../models/Shop');
 const { sendResponse } = require('../utils/response');
 const { resolveShopFilter } = require('../utils/shopScope');
 
@@ -72,6 +73,10 @@ exports.createMedicine = async (req, res, next) => {
       medicineData.shopId = req.shopId;
     } else if (req.shopFilter) {
       medicineData.shopId = req.shopFilter;
+    } else {
+      // Default to the first active shop so the medicine is visible to customers.
+      const fallbackShop = await Shop.findOne({ isActive: true }).sort({ createdAt: 1 }).select('_id');
+      if (fallbackShop) medicineData.shopId = fallbackShop._id;
     }
 
     const medicine = await Medicine.create(medicineData);
