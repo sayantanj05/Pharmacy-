@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 let lastError = null;
 
 const connectDB = async () => {
+  // Skip if already connected (serverless warm starts)
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+
   try {
     // Hardcoded URI to bypass env var issues
     const uri = 'mongodb+srv://goandstudyadmin:goandstudyadmin@goandstudycluster.4jz25t7.mongodb.net/Pharmacy?appName=goandstudycluster';
