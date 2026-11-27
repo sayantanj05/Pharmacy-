@@ -43,7 +43,8 @@ app.get('/', (req, res) => {
 
 const mongoose = require('mongoose');
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  await connectDB(); // Ensure connection attempt completes
   const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
   res.json({
     success: true,
