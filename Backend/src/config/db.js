@@ -4,17 +4,17 @@ let lastError = null;
 
 const connectDB = async () => {
   try {
-    // Use createConnection like the direct test that passed
+    // Hardcoded URI to bypass env var issues
     const uri = 'mongodb+srv://goandstudyadmin:goandstudyadmin@goandstudycluster.4jz25t7.mongodb.net/Pharmacy?appName=goandstudycluster';
 
-    const conn = await mongoose.createConnection(uri, {
+    const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       bufferTimeoutMS: 30000,
-    }).asPromise();
+    });
 
     lastError = null;
-    console.log(`MongoDB Connected: ${conn.host}`);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     lastError = `${error.name}: ${error.message} (code: ${error.code || 'unknown'})`;
     console.error(`Error connecting to MongoDB: ${error.message}`);
