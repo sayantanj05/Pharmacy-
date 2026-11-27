@@ -4,8 +4,11 @@ let lastError = null;
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: process.env.MONGODB_DB_NAME,
+    const uri = process.env.MONGODB_URI || 'mongodb+srv://goandstudyadmin:goandstudyadmin@goandstudycluster.4jz25t7.mongodb.net/?appName=goandstudycluster';
+    const dbName = process.env.MONGODB_DB_NAME || 'Pharmacy';
+
+    const conn = await mongoose.connect(uri, {
+      dbName,
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       bufferTimeoutMS: 30000,
