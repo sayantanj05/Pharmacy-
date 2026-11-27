@@ -59,6 +59,22 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('/debug-env', (req, res) => {
+  const rawUri = process.env.MONGODB_URI || '';
+  const rawDbName = process.env.MONGODB_DB_NAME || '';
+  res.json({
+    mongoUriLength: rawUri.length,
+    mongoUriFirst50: rawUri.substring(0, 50),
+    mongoUriLast20: rawUri.slice(-20),
+    mongoDbNameLength: rawDbName.length,
+    mongoDbNameChars: rawDbName.split('').map(c => ({
+      char: c,
+      code: c.charCodeAt(0)
+    })),
+    dbNameEqualsPharmacy: rawDbName === 'Pharmacy',
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/orders', orderRoutes);
