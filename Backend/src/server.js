@@ -55,36 +55,6 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/test-direct-connect', async (req, res) => {
-  const mongoose = require('mongoose');
-  const directUri = 'mongodb+srv://goandstudyadmin:goandstudyadmin@goandstudycluster.4jz25t7.mongodb.net/Pharmacy?appName=goandstudycluster';
-  try {
-    const conn = await mongoose.createConnection(directUri, {
-      serverSelectionTimeoutMS: 10000,
-    }).asPromise();
-    await conn.close();
-    res.json({ success: true, message: 'Direct connection test passed' });
-  } catch (error) {
-    res.json({ success: false, message: 'Direct connection test failed', error: error.message, code: error.code, name: error.name });
-  }
-});
-
-app.get('/debug-env', (req, res) => {
-  const rawUri = process.env.MONGODB_URI || '';
-  const rawDbName = process.env.MONGODB_DB_NAME || '';
-  res.json({
-    mongoUriLength: rawUri.length,
-    mongoUriFirst50: rawUri.substring(0, 50),
-    mongoUriLast20: rawUri.slice(-20),
-    mongoDbNameLength: rawDbName.length,
-    mongoDbNameChars: rawDbName.split('').map(c => ({
-      char: c,
-      code: c.charCodeAt(0)
-    })),
-    dbNameEqualsPharmacy: rawDbName === 'Pharmacy',
-  });
-});
-
 app.use('/api/auth', authRoutes);
 app.use('/api/shops', shopRoutes);
 app.use('/api/users', userRoutes);
