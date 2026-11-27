@@ -19,7 +19,7 @@ const connectDB = async () => {
     lastError = null;
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    lastError = error.message;
+    lastError = `${error.name}: ${error.message} (code: ${error.code || 'unknown'})`;
     console.error(`Error connecting to MongoDB: ${error.message}`);
   }
 };
