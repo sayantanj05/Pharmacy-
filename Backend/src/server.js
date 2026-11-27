@@ -55,6 +55,20 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/test-direct-connect', async (req, res) => {
+  const mongoose = require('mongoose');
+  const directUri = 'mongodb+srv://goandstudyadmin:goandstudyadmin@goandstudycluster.4jz25t7.mongodb.net/Pharmacy?appName=goandstudycluster';
+  try {
+    const conn = await mongoose.createConnection(directUri, {
+      serverSelectionTimeoutMS: 10000,
+    }).asPromise();
+    await conn.close();
+    res.json({ success: true, message: 'Direct connection test passed' });
+  } catch (error) {
+    res.json({ success: false, message: 'Direct connection test failed', error: error.message, code: error.code, name: error.name });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/shops', shopRoutes);
 app.use('/api/users', userRoutes);
