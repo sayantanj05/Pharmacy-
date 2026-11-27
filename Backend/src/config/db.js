@@ -16,10 +16,11 @@ const connectDB = async () => {
 
   connectionPromise = (async () => {
     try {
-      // Hardcoded URI to bypass env var issues
-      const uri = 'mongodb+srv://goandstudyadmin:goandstudyadmin@goandstudycluster.4jz25t7.mongodb.net/Pharmacy?appName=goandstudycluster';
+      const uri = process.env.MONGODB_URI || 'mongodb+srv://goandstudyadmin:goandstudyadmin@goandstudycluster.4jz25t7.mongodb.net/Pharmacy?appName=goandstudycluster';
+      const dbName = process.env.MONGODB_DB_NAME || 'Pharmacy';
 
       const conn = await mongoose.connect(uri, {
+        dbName,
         serverSelectionTimeoutMS: 30000,
         socketTimeoutMS: 45000,
         bufferTimeoutMS: 30000,
