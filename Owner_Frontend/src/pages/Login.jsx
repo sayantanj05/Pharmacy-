@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaPills } from 'react-icons/fa';
-
-const API_URL = 'http://192.168.31.187:5000/api';
+import api from '../services/api';
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');

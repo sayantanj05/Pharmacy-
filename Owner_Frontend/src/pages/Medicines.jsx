@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
 import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
-
-const API_URL = 'http://192.168.31.187:5000/api';
+import api from '../services/api';
 
 const Medicines = ({ user }) => {
   const [medicines, setMedicines] = useState([]);
@@ -21,9 +19,8 @@ const Medicines = ({ user }) => {
 
   const fetchMedicines = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       const shopFilter = user?.shopId ? `?shopId=${user.shopId}` : '';
-      const res = await axios.get(`${API_URL}/medicines${shopFilter}`, { headers });
+      const res = await api.get(`/medicines${shopFilter}`);
       const payload = res.data.data?.medicines || res.data.medicines || [];
       setMedicines(payload);
     } catch (error) {
@@ -37,13 +34,12 @@ const Medicines = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     const data = { ...formData, price: Number(formData.price), stock: Number(formData.stock), minStockLevel: Number(formData.minStockLevel) };
     try {
       if (editingMedicine) {
-        await axios.put(`${API_URL}/medicines/${editingMedicine._id}`, data, { headers });
+        await api.put(`/medicines/${editingMedicine._id}`, data);
       } else {
-        await axios.post(`${API_URL}/medicines`, data, { headers });
+        await api.post('/medicines', data);
       }
       setShowModal(false);
       setEditingMedicine(null);
@@ -61,9 +57,8 @@ const Medicines = ({ user }) => {
   };
 
   const handleDelete = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.delete(`${API_URL}/medicines/${id}`, { headers });
+      await api.delete(`/medicines/${id}`);
       fetchMedicines();
     } catch (error) {
       console.error('Error deleting medicine:', error);

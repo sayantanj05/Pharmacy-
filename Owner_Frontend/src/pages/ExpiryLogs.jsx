@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSyncAlt } from 'react-icons/fa';
 import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
-
-const API_URL = 'http://192.168.31.187:5000/api';
+import api from '../services/api';
 
 const ExpiryLogs = ({ user }) => {
   const [logs, setLogs] = useState([]);
@@ -16,9 +14,8 @@ const ExpiryLogs = ({ user }) => {
 
   const fetchLogs = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       const shopFilter = user?.shopId ? `?shopId=${user.shopId}` : '';
-      const res = await axios.get(`${API_URL}/expiry-logs${shopFilter}`, { headers });
+      const res = await api.get(`/expiry-logs${shopFilter}`);
       const payload = res.data.data?.expiryLogs || res.data.expiryLogs || res.data.data?.logs || res.data.logs || [];
       setLogs(payload);
     } catch (error) {
@@ -32,9 +29,8 @@ const ExpiryLogs = ({ user }) => {
 
   const handleReplacement = async (e) => {
     e.preventDefault();
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.post(`${API_URL}/expiry-logs/${selectedLog._id}/replacement`, replacementData, { headers });
+      await api.post(`/expiry-logs/${selectedLog._id}/replacement`, replacementData);
       setShowModal(false);
       setSelectedLog(null);
       fetchLogs();

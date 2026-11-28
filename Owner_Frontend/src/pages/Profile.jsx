@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSave } from 'react-icons/fa';
-
-const API_URL = 'http://192.168.31.187:5000/api';
+import api from '../services/api';
 
 const Profile = ({ user, onLogout }) => {
   const [shop, setShop] = useState(null);
@@ -13,8 +11,7 @@ const Profile = ({ user, onLogout }) => {
 
   const fetchShop = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-      const res = await axios.get(`${API_URL}/shops/current`, { headers });
+      const res = await api.get('/shops/current');
       const payload = res.data.data?.shop || res.data.shop || {};
       setShop(payload);
       setFormData({
@@ -36,9 +33,8 @@ const Profile = ({ user, onLogout }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.put(`${API_URL}/shops/${shop._id}`, formData, { headers });
+      await api.put(`/shops/${shop._id}`, formData);
       setEditing(false);
       fetchShop();
     } catch (error) {

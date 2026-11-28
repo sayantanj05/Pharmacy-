@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash, FaDownload } from 'react-icons/fa';
 import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
-
-const API_URL = 'http://192.168.31.187:5000/api';
+import api from '../services/api';
 
 const Supplies = ({ user }) => {
   const [supplies, setSupplies] = useState([]);
@@ -18,12 +16,11 @@ const Supplies = ({ user }) => {
 
   const fetchData = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
       const shopFilter = user?.shopId ? `?shopId=${user.shopId}` : '';
       const [suppliesRes, medicinesRes, vendorsRes] = await Promise.all([
-        axios.get(`${API_URL}/supplies${shopFilter}`, { headers }),
-        axios.get(`${API_URL}/medicines${shopFilter}`, { headers }),
-        axios.get(`${API_URL}/vendors${shopFilter}`, { headers }),
+        api.get(`/supplies${shopFilter}`),
+        api.get(`/medicines${shopFilter}`),
+        api.get(`/vendors${shopFilter}`),
       ]);
       setSupplies(suppliesRes.data.data?.supplies || suppliesRes.data.supplies || []);
       setMedicines(medicinesRes.data.data?.medicines || medicinesRes.data.medicines || []);
@@ -39,7 +36,6 @@ const Supplies = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     const payload = {
       ...formData,
       items: formData.items.map(item => ({
@@ -52,9 +48,9 @@ const Supplies = ({ user }) => {
     };
     try {
       if (editingSupply) {
-        await axios.put(`${API_URL}/supplies/${editingSupply._id}`, payload, { headers });
+        await api.put(`/supplies/${editingSupply._id}`, payload);
       } else {
-        await axios.post(`${API_URL}/supplies`, payload, { headers });
+        await api.post('/supplies', payload);
       }
       setShowModal(false);
       setEditingSupply(null);
@@ -71,9 +67,8 @@ const Supplies = ({ user }) => {
   };
 
   const handleDelete = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      await axios.delete(`${API_URL}/supplies/${id}`, { headers });
+      await api.delete(`/supplies/${id}`);
       fetchData();
     } catch (error) {
       console.error('Error deleting supply:', error);
@@ -81,9 +76,8 @@ const Supplies = ({ user }) => {
   };
 
   const downloadPDF = async (id) => {
-    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     try {
-      const res = await axios.get(`${API_URL}/supplies/${id}/pdf`, { headers, responseType: 'blob' });
+      const res = await api.get(`/supplies/${id}/pdf`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;

@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { FaPlus, FaTrash, FaPaperPlane, FaSyncAlt } from 'react-icons/fa';
 import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
-
-const API_URL = 'http://192.168.31.187:5000/api';
+import api from '../services/api';
 
 const emptyItem = {
   name: '',
@@ -37,11 +35,9 @@ const Procurement = () => {
   const [submitting, setSubmitting] = useState(false);
   const refreshToken = useRefreshOnFocus();
 
-  const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
-
   const fetchRequests = async () => {
     try {
-      const res = await axios.get(`${API_URL}/procurement`, { headers });
+      const res = await api.get('/procurement');
       setRequests(res.data.data.procurements || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Could not load procurement requests.');
@@ -81,7 +77,7 @@ const Procurement = () => {
           expiryDate: item.expiryDate || null,
         })),
       };
-      await axios.post(`${API_URL}/procurement`, payload, { headers });
+      await api.post('/procurement', payload);
       setItems([{ ...emptyItem }]);
       setNotes('');
       setMessage('Procurement request sent to the super admin.');
@@ -95,7 +91,7 @@ const Procurement = () => {
 
   const cancelRequest = async (id) => {
     try {
-      await axios.post(`${API_URL}/procurement/${id}/cancel`, {}, { headers });
+      await api.post(`/procurement/${id}/cancel`);
       fetchRequests();
     } catch (err) {
       setError(err.response?.data?.message || 'Could not cancel request.');
