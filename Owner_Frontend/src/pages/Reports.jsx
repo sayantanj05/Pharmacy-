@@ -33,6 +33,10 @@ const Reports = ({ user }) => {
     }
   };
 
+  useEffect(() => {
+    fetchReport();
+  }, [user]);
+
   const orderTrend = useMemo(() => {
     if (!report?.orders?.length) return [];
     const map = {};
