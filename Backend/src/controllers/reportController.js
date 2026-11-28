@@ -22,7 +22,7 @@ const buildFilter = async (req, baseFilter) => {
 
 exports.getFinancialReport = async (req, res, next) => {
   try {
-    const filter = await buildFilter(req, { paymentStatus: 'paid' });
+    const filter = await buildFilter(req, { paymentStatus: { $in: ['paid', 'completed'] } });
     if (!filter) {
       res.status(200).json({ totalRevenue: 0, orders: [] });
       return;
@@ -38,7 +38,7 @@ exports.getFinancialReport = async (req, res, next) => {
 
 exports.getFinancialPDF = async (req, res, next) => {
   try {
-    const filter = await buildFilter(req, { paymentStatus: 'paid' });
+    const filter = await buildFilter(req, { paymentStatus: { $in: ['paid', 'completed'] } });
     const orders = filter ? await Order.find(filter) : [];
     const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
     res.setHeader('Content-Type', 'application/pdf');
